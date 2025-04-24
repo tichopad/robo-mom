@@ -1,10 +1,7 @@
-import { pipeline } from "@huggingface/transformers";
+import { type FeatureExtractionPipeline, pipeline } from "@huggingface/transformers";
 import { logger } from "./logger.ts";
 
-const extractorNomicV1 = await pipeline(
-	"feature-extraction",
-	"nomic-ai/nomic-embed-text-v1",
-);
+let extractorNomicV1: FeatureExtractionPipeline | null = null;
 
 type EmbeddingVector = number[];
 
@@ -13,6 +10,14 @@ export async function generateEmbedding(
 	taskInstructionPrefix?: "search_query" | "search_document",
 ): Promise<EmbeddingVector> {
 	performance.mark("start");
+
+	if (!extractorNomicV1) {
+		logger.debug("Initializing 'nomic-ai/nomic-embed-text-v1' extractor");
+		extractorNomicV1 = await pipeline(
+			"feature-extraction",
+			"nomic-ai/nomic-embed-text-v1",
+		);
+	}
 
 	const prefix = taskInstructionPrefix ? `${taskInstructionPrefix}: ` : "";
 	const embeddings = await extractorNomicV1([`${prefix}${input}`], {
