@@ -1,9 +1,9 @@
+import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { createInterface } from "node:readline/promises";
 import { defineCommand, runMain } from "citty";
 import { db } from "./db/client.ts";
 import { logger } from "./logger.ts";
-import { createInterface } from "node:readline/promises";
-import { writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
 
 const main = defineCommand({
 	meta: {
@@ -25,7 +25,8 @@ const main = defineCommand({
 		},
 		output: {
 			type: "string",
-			description: "Output query results to a JSON file (only works with --query)",
+			description:
+				"Output query results to a JSON file (only works with --query)",
 			alias: "o",
 		},
 	},
@@ -75,14 +76,17 @@ async function executeQuery(query: string) {
 	} catch (error) {
 		if (error instanceof Error)
 			logger.error(`Error executing query: ${error.message}`);
-    else throw error
+		else throw error;
 	}
 }
 
 /**
  * Save query results to a JSON file
  */
-async function saveResultsToFile(rows: Record<string, unknown>[], outputPath: string): Promise<void> {
+async function saveResultsToFile(
+	rows: Record<string, unknown>[],
+	outputPath: string,
+): Promise<void> {
 	try {
 		const absolutePath = resolve(outputPath);
 		await writeFile(absolutePath, JSON.stringify(rows, null, 2));
@@ -101,15 +105,17 @@ async function saveResultsToFile(rows: Record<string, unknown>[], outputPath: st
  * - Truncates long text values
  * - Replaces newlines with spaces
  */
-function formatRowsForDisplay(rows: Record<string, unknown>[]): Record<string, unknown>[] {
+function formatRowsForDisplay(
+	rows: Record<string, unknown>[],
+): Record<string, unknown>[] {
 	const MAX_COLUMN_WIDTH = 60;
 
-	return rows.map(row => {
+	return rows.map((row) => {
 		const formattedRow = { ...row };
 		for (const key in formattedRow) {
-			if (typeof formattedRow[key] === 'string') {
+			if (typeof formattedRow[key] === "string") {
 				// Replace newlines with spaces
-				let value = (formattedRow[key] as string).replace(/\n/g, '\\n');
+				let value = (formattedRow[key] as string).replace(/\n/g, "\\n");
 
 				// Truncate long text
 				if (value.length > MAX_COLUMN_WIDTH) {
@@ -119,7 +125,10 @@ function formatRowsForDisplay(rows: Record<string, unknown>[]): Record<string, u
 				formattedRow[key] = value;
 			} else if (Array.isArray(formattedRow[key])) {
 				// Format arrays to prevent breaking the table
-				formattedRow[key] = JSON.stringify(formattedRow[key]).substring(0, MAX_COLUMN_WIDTH);
+				formattedRow[key] = JSON.stringify(formattedRow[key]).substring(
+					0,
+					MAX_COLUMN_WIDTH,
+				);
 				if ((formattedRow[key] as string).length === MAX_COLUMN_WIDTH) {
 					formattedRow[key] = `${formattedRow[key]}...`;
 				}
@@ -151,17 +160,17 @@ function displayResults(rows: Record<string, unknown>[]): void {
 
 		// Find the longest column name for alignment
 		const columnNames = Object.keys(row);
-		const maxColumnWidth = Math.max(...columnNames.map(name => name.length));
+		const maxColumnWidth = Math.max(...columnNames.map((name) => name.length));
 
 		// Display each field with proper alignment
 		for (const [key, value] of Object.entries(row)) {
-			const padding = ' '.repeat(maxColumnWidth - key.length);
+			const padding = " ".repeat(maxColumnWidth - key.length);
 			console.log(`${key}:${padding} ${value}`);
 		}
 
 		// Add a separator between rows
 		if (index < rows.length - 1) {
-			console.log('');
+			console.log("");
 		}
 	}
 }

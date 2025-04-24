@@ -7,7 +7,6 @@
 		"check:biome": "biome check --fix .",
 		"check:ts": "tsc",
 		"db:migrate": "drizzle-kit generate && node --env-file=.env ./src/db/migrate.ts",
-		"db:studio": "drizzle-kit studio --verbose",
 		"db:cli": "node --env-file=.env ./src/db-cli.ts",
 		"start": "node --env-file=.env ./src/main.ts",
 		"cli": "node --env-file=.env ./src/cli.ts"

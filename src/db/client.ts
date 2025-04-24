@@ -1,6 +1,6 @@
-import { drizzle } from "drizzle-orm/pglite";
 import { PGlite } from "@electric-sql/pglite";
 import { vector } from "@electric-sql/pglite/vector";
+import { drizzle } from "drizzle-orm/pglite";
 import * as schema from "./schema.ts";
 
 export const pgliteClient = new PGlite({

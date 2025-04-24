@@ -17,7 +17,10 @@ const main = defineCommand({
 	},
 	async run({ args }) {
 		if (args["load-files"]) {
-			logger.debug("Received command to load files from glob: %s", args["load-files"]);
+			logger.debug(
+				"Received command to load files from glob: %s",
+				args["load-files"],
+			);
 			await loadMarkdownFilesFromGlob(args["load-files"]);
 			logger.info("Successfully loaded files.");
 			return;

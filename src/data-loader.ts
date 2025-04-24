@@ -1,7 +1,7 @@
-import { extract as extractFrontmatter } from "@std/front-matter/any";
-import { test as testFrontmatter } from "@std/front-matter/test";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { extract as extractFrontmatter } from "@std/front-matter/any";
+import { test as testFrontmatter } from "@std/front-matter/test";
 import { chunkMarkdown } from "./chunk-text.ts";
 import { db } from "./db/client.ts";
 import { notesTable } from "./db/schema.ts";
@@ -41,13 +41,25 @@ export async function loadMarkdownFileToDb(filePath: string): Promise<void> {
 
 	const bodyChunks = chunkMarkdown(body, 12_000);
 
-	logger.debug("Chunked markdown file: %s (%d chunks)", filePath, bodyChunks.length);
+	logger.debug(
+		"Chunked markdown file: %s (%d chunks)",
+		filePath,
+		bodyChunks.length,
+	);
 
 	let chunkIndex = 0;
 	for (const chunk of bodyChunks) {
-		logger.debug("Generating embeddings for chunk %d of %s", chunkIndex, filePath);
+		logger.debug(
+			"Generating embeddings for chunk %d of %s",
+			chunkIndex,
+			filePath,
+		);
 		const contentEmbedding = await generateEmbedding(chunk.content);
-		logger.debug("Generated embeddings for chunk %d of %s", chunkIndex, filePath);
+		logger.debug(
+			"Generated embeddings for chunk %d of %s",
+			chunkIndex,
+			filePath,
+		);
 		const filePathEmbedding = await generateEmbedding(filePath);
 
 		await db.insert(notesTable).values({

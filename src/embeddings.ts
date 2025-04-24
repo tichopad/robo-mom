@@ -1,4 +1,7 @@
-import { type FeatureExtractionPipeline, pipeline } from "@huggingface/transformers";
+import {
+	type FeatureExtractionPipeline,
+	pipeline,
+} from "@huggingface/transformers";
 import { logger } from "./logger.ts";
 
 let extractorNomicV1: FeatureExtractionPipeline | null = null;
@@ -13,9 +16,13 @@ export async function generateEmbedding(
 
 	if (!extractorNomicV1) {
 		logger.debug("Initializing 'nomic-ai/nomic-embed-text-v1' extractor");
-		extractorNomicV1 = await pipeline(
+		extractorNomicV1 = await pipeline<"feature-extraction">(
 			"feature-extraction",
 			"nomic-ai/nomic-embed-text-v1",
+		);
+	} else {
+		logger.debug(
+			"'nomic-ai/nomic-embed-text-v1' extractor already initialized",
 		);
 	}
 
