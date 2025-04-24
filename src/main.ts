@@ -1,7 +1,7 @@
-import { generateText, tool } from "ai";
-import { openai } from "@ai-sdk/openai";
-import { z } from "zod";
 import { inspect } from "node:util";
+import { openai } from "@ai-sdk/openai";
+import { generateText, tool } from "ai";
+import { z } from "zod";
 
 const aboutUser = tool({
 	description: "Basic information about a user.",

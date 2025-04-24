@@ -35,12 +35,21 @@ importers:
       ai:
         specifier: 4.3.9
         version: 4.3.9(react@19.1.0)(zod@3.24.3)
+      citty:
+        specifier: ^0.1.6
+        version: 0.1.6
+      consola:
+        specifier: ^3.4.2
+        version: 3.4.2
       drizzle-kit:
         specifier: 0.31.0
         version: 0.31.0
       drizzle-orm:
         specifier: 0.42.0
         version: 0.42.0(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.0)
+      onnxruntime-node:
+        specifier: ^1.21.1
+        version: 1.21.1
       zod:
         specifier: 3.24.3
         version: 3.24.3
@@ -703,6 +712,9 @@ packages:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
     engines: {node: '>=18'}
 
+  citty@0.1.6:
+    resolution: {integrity: sha512-tskPPKEs8D2KPafUypv2gxwJP8h/OaJmC82QQGGDQcHvXX43xF2VDACcJVmZ0EuSxkpO9Kc4MlrA3q0+FG58AQ==}
+
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
     engines: {node: '>=7.0.0'}
@@ -716,6 +728,10 @@ packages:
   color@4.2.3:
     resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
     engines: {node: '>=12.5.0'}
+
+  consola@3.4.2:
+    resolution: {integrity: sha512-5IKcdX0nnYavi6G7TtOhwkYzyjfJlatbjMjuLSfE2kYT5pMDOilZ4OvMhi637CcDICTmz3wARPoyhqyX1Y+XvA==}
+    engines: {node: ^14.18.0 || >=16.10.0}
 
   debug@4.4.0:
     resolution: {integrity: sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==}
@@ -1012,6 +1028,9 @@ packages:
   onnxruntime-common@1.21.0:
     resolution: {integrity: sha512-Q632iLLrtCAVOTO65dh2+mNbQir/QNTVBG3h/QdZBpns7mZ0RYbLRBgGABPbpU9351AgYy7SJf1WaeVwMrBFPQ==}
 
+  onnxruntime-common@1.21.1:
+    resolution: {integrity: sha512-E0q8+fMyJ+F8dvlwVsXcujrOc96lkPIDAZh3p6pjrZS4bzjowIcUMv48W5zOcFLtlWyycUlRPJWUUK2+3IL1eA==}
+
   onnxruntime-common@1.22.0-dev.20250409-89f8206ba4:
     resolution: {integrity: sha512-vDJMkfCfb0b1A836rgHj+ORuZf4B4+cc2bASQtpeoJLueuFc5DuYwjIZUBrSvx/fO5IrLjLz+oTrB3pcGlhovQ==}
 
@@ -1021,6 +1040,10 @@ packages:
 
   onnxruntime-node@1.21.0:
     resolution: {integrity: sha512-NeaCX6WW2L8cRCSqy3bInlo5ojjQqu2fD3D+9W5qb5irwxhEyWKXeH2vZ8W9r6VxaMPUan+4/7NDwZMtouZxEw==}
+    os: [win32, darwin, linux]
+
+  onnxruntime-node@1.21.1:
+    resolution: {integrity: sha512-YThL/YYeGAeytecOvRcTKUORTIE2f8/iSo/JZgHFawWrV4zOY7fWLEaNuscgjmY5C5/VE/Wr7tm+ucSsc/AysQ==}
     os: [win32, darwin, linux]
 
   onnxruntime-web@1.14.0:
@@ -1642,6 +1665,10 @@ snapshots:
 
   chownr@3.0.0: {}
 
+  citty@0.1.6:
+    dependencies:
+      consola: 3.4.2
+
   color-convert@2.0.1:
     dependencies:
       color-name: 1.1.4
@@ -1657,6 +1684,8 @@ snapshots:
     dependencies:
       color-convert: 2.0.1
       color-string: 1.9.1
+
+  consola@3.4.2: {}
 
   debug@4.4.0:
     dependencies:
@@ -1878,6 +1907,8 @@ snapshots:
 
   onnxruntime-common@1.21.0: {}
 
+  onnxruntime-common@1.21.1: {}
+
   onnxruntime-common@1.22.0-dev.20250409-89f8206ba4: {}
 
   onnxruntime-node@1.14.0:
@@ -1889,6 +1920,12 @@ snapshots:
     dependencies:
       global-agent: 3.0.0
       onnxruntime-common: 1.21.0
+      tar: 7.4.3
+
+  onnxruntime-node@1.21.1:
+    dependencies:
+      global-agent: 3.0.0
+      onnxruntime-common: 1.21.1
       tar: 7.4.3
 
   onnxruntime-web@1.14.0:
