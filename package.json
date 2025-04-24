@@ -7,9 +7,9 @@
 		"check:biome": "biome check --fix .",
 		"check:ts": "tsc",
 		"db:migrate": "drizzle-kit generate && node --env-file=.env ./src/db/migrate.ts",
-		"db:cli": "node --env-file=.env ./src/db-cli.ts",
-		"start": "node --env-file=.env ./src/main.ts",
-		"cli": "node --env-file=.env ./src/cli.ts"
+		"db:cli": "node --no-warnings=ExperimentalWarning --env-file=.env ./src/db-cli.ts",
+		"start": "node --no-warnings=ExperimentalWarning --env-file=.env ./src/main.ts",
+		"cli": "node --no-warnings=ExperimentalWarning --env-file=.env ./src/cli.ts"
 	},
 	"packageManager": "pnpm@10.2.0",
 	"dependencies": {

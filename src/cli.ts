@@ -1,6 +1,6 @@
 import { defineCommand, runMain } from "citty";
-import { loadMarkdownFilesFromGlob } from "./data-loader.ts";
-import { logger } from "./logger.ts";
+import loadFilesCommand from "./commands/load-files.ts";
+import queryCommand from "./commands/query.ts";
 
 const main = defineCommand({
 	meta: {
@@ -8,23 +8,9 @@ const main = defineCommand({
 		version: "1.0.0",
 		description: "Your personal AI notes assistant",
 	},
-	args: {
-		"load-files": {
-			type: "string",
-			description: "Load markdown files from a glob pattern",
-			required: true,
-		},
-	},
-	async run({ args }) {
-		if (args["load-files"]) {
-			logger.debug(
-				"Received command to load files from glob: %s",
-				args["load-files"],
-			);
-			await loadMarkdownFilesFromGlob(args["load-files"]);
-			logger.info("Successfully loaded files.");
-			return;
-		}
+	subCommands: {
+		"load-files": loadFilesCommand,
+		query: queryCommand,
 	},
 });
 
