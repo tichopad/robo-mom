@@ -60,7 +60,7 @@ export async function loadMarkdownFileToDb(filePath: string): Promise<void> {
 			chunkIndex,
 			filePath,
 		);
-		const filePathEmbedding = await generateEmbedding(filePath);
+		const filePathEmbedding = await generateEmbedding(filePath, 'search_document');
 
 		await db.insert(notesTable).values({
 			filename: filePath,
