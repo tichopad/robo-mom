@@ -1,0 +1,15 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+1. The project uses the latest Node.js version, which supports running Typescript files natively
+2. Because of rule 1), there's no need for additional tools like `tsx` or `ts-node`, just use Node.js
+3. The project uses `pnpm` as a dependency manager
+4. The project uses Drizzle ORM for all database operations
+5. The project uses PGlite (see https://pglite.dev/docs/about) as database - it's a file-based Postgres fork
+6. When choosing additional dependencies, prefer using Deno's `@std` libraries (see https://jsr.io/@std) or some of the `unjs` (see https://unjs.io/packages?q=&order=1&orderBy=title) ecosystem libraries
+7. Prefer Vercel's `ai` SDK (see https://sdk.vercel.ai/docs/introduction) for all AI/LLM operations
+8. Always prefer functional programming patterns
+9. The project is a CLI application using primarily the `citty` package for the base CLI interface
+10. Always assume the env. file is set up correctly.
