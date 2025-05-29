@@ -1,6 +1,5 @@
 import { Box, Text, Transform } from "ink";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useChat } from "../chat/context";
+import { useEffect, useState } from "react";
 
 type Props = {
 	input: string;
@@ -11,7 +10,7 @@ type Props = {
  */
 export default function PromptInput({ input }: Props) {
 	return (
-		<Box marginLeft={0}>
+		<Box marginLeft={1}>
 			<Text color="#5ac8fa" bold>
 				💲
 			</Text>

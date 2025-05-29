@@ -1,7 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { Box, Text, useApp, useInput } from "ink";
-import { useState } from "react";
+import { useReducer, useState } from "react";
 import DebugBox from "./components/debug-box.tsx";
 import { ErrorBox } from "./components/error-box.tsx";
 import Footer from "./components/footer.tsx";
@@ -31,48 +31,116 @@ const testMessages: Message[] = [
 		content: "What is the capital of France?",
 		id: "3",
 	},
+	{
+		role: "assistant",
+		content: "PFOS is harmful effects on human health.",
+		id: "5",
+	},
 ];
 
+type State = {
+	messages: Message[];
+	input: string;
+	isLoading: boolean;
+	error: string | null;
+	debugInfo: string | null;
+	streamingResponse: string;
+};
+
+type Action =
+	| { type: "add-message"; message: Message }
+	| { type: "set-input"; input: string }
+	| { type: "set-is-loading"; isLoading: boolean }
+	| { type: "set-error"; error: string | null }
+	| { type: "set-debug-info"; debugInfo: string | null }
+	| { type: "set-streaming-response"; streamingResponse: string }
+	| { type: "llm-request-start" }
+	| { type: "delete-char" }
+	| { type: "add-char"; char: string }
+	| {
+			type: "llm-request-stream-end";
+			assistantMessage: Message;
+	  };
+
+function reducer(state: State, action: Action): State {
+	switch (action.type) {
+		case "add-message":
+			return { ...state, messages: [...state.messages, action.message] };
+		case "set-input":
+			return { ...state, input: action.input };
+		case "set-is-loading":
+			return { ...state, isLoading: action.isLoading };
+		case "set-error":
+			return { ...state, error: action.error, isLoading: false };
+		case "set-debug-info":
+			return { ...state, debugInfo: action.debugInfo };
+		case "set-streaming-response":
+			return { ...state, streamingResponse: action.streamingResponse };
+		case "llm-request-start":
+			return {
+				...state,
+				isLoading: true,
+				error: null,
+				debugInfo: "Preparing to send request...",
+				input: "",
+			};
+		case "delete-char":
+			return { ...state, input: state.input.slice(0, -1) };
+		case "add-char":
+			return { ...state, input: state.input + action.char };
+		case "llm-request-stream-end":
+			return {
+				...state,
+				messages: [...state.messages, action.assistantMessage],
+				streamingResponse: "",
+				debugInfo: null,
+				isLoading: false,
+			};
+		default:
+			return state;
+	}
+}
+
+const initialState: State = {
+	messages: [],
+	input: "",
+	isLoading: false,
+	error: null,
+	debugInfo: null,
+	streamingResponse: "",
+};
+
 export default function Chat() {
-	const [messages, setMessages] = useState<Message[]>([]);
-	const [input, setInput] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const [debugInfo, setDebugInfo] = useState<string | null>(null);
-	const [streamingResponse, setStreamingResponse] = useState("");
+	const [state, dispatch] = useReducer(reducer, initialState);
 	const app = useApp();
 
 	useInput((inputChar, key) => {
-		if (isLoading) return; // Prevent input while loading
+		if (state.isLoading) return; // Prevent input while loading
 
-		if (key.return && input.trim() === "/exit") {
+		if (key.return && state.input.trim() === "/exit") {
 			app.exit();
 			return;
 		}
 
 		if (key.return) {
 			// Don't submit empty messages
-			if (input.trim() === "") return;
+			if (state.input.trim() === "") return;
 
 			const newUserMessage: Message = {
 				role: "user",
-				content: input,
+				content: state.input,
 				id: createRandomString(),
 			};
-			setMessages((prevMessages) => [...prevMessages, newUserMessage]);
+			dispatch({ type: "add-message", message: newUserMessage });
 
-			// Clear input and prepare for AI response
-			setInput("");
-			setIsLoading(true);
-			setError(null);
-			setDebugInfo("Preparing to send request...");
+			dispatch({ type: "llm-request-start" });
 
 			// Get AI response
 			handleAIResponse(newUserMessage);
 		} else if (key.backspace || key.delete) {
-			setInput((prev) => prev.slice(0, -1));
+			dispatch({ type: "delete-char" });
 		} else if (inputChar) {
-			setInput((prev) => prev + inputChar);
+			dispatch({ type: "add-char", char: inputChar });
 		}
 	});
 
@@ -80,28 +148,33 @@ export default function Chat() {
 	const handleAIResponse = async (userMessage: Message) => {
 		// Check for API key
 		if (!process.env.OPENAI_API_KEY) {
-			setError("OPENAI_API_KEY not found. Please add it to your .env file.");
-			setIsLoading(false);
+			dispatch({
+				type: "set-error",
+				error: "OPENAI_API_KEY not found. Please add it to your .env file.",
+			});
 			return;
 		}
 
 		try {
 			// Debug: Log API key presence
-			setDebugInfo("Starting API request...");
+			dispatch({
+				type: "set-debug-info",
+				debugInfo: "Starting API request...",
+			});
 
-			const allMessages = [
-				...messages.map((msg) => ({
+			const allMessages = state.messages
+				.map((msg) => ({
 					role: msg.role as "user" | "assistant",
 					content: msg.content,
-				})),
-				{ role: "user" as const, content: userMessage.content },
-			];
+				}))
+				.concat({ role: "user" as const, content: userMessage.content });
 
-			setDebugInfo("Sending request to OpenAI...");
+			dispatch({
+				type: "set-debug-info",
+				debugInfo: "Sending request to OpenAI...",
+			});
 
-			// Create empty assistant message for streaming
-			const assistantId = `assistant-${Date.now()}`;
-			setStreamingResponse("");
+			dispatch({ type: "set-streaming-response", streamingResponse: "" });
 
 			// Use streamText to get real-time responses
 			const { textStream } = streamText({
@@ -109,7 +182,11 @@ export default function Chat() {
 				messages: allMessages,
 			});
 
-			setDebugInfo("Stream connected, receiving tokens...");
+			// setDebugInfo("Stream connected, receiving tokens...");
+			dispatch({
+				type: "set-debug-info",
+				debugInfo: "Stream connected, receiving tokens...",
+			});
 
 			// Initialize accumulated response
 			let fullResponse = "";
@@ -117,28 +194,34 @@ export default function Chat() {
 			// Stream the response chunks
 			for await (const chunk of textStream) {
 				fullResponse += chunk;
-				setStreamingResponse(fullResponse);
+				dispatch({
+					type: "set-streaming-response",
+					streamingResponse: fullResponse,
+				});
 			}
 
 			// When the stream ends, add the full message to the conversation
 			const newAssistantMessage: Message = {
 				role: "assistant",
-				content: fullResponse,
-				id: assistantId,
+				content: fullResponse.trim(),
+				id: createRandomString(),
 			};
 
-			setMessages((prev) => [...prev, newAssistantMessage]);
-			setStreamingResponse("");
-			setDebugInfo(null);
+			dispatch({
+				type: "llm-request-stream-end",
+				assistantMessage: newAssistantMessage,
+			});
 		} catch (error) {
-			setDebugInfo(
-				`API error: ${error instanceof Error ? error.message : String(error)}`,
-			);
-			setError(
-				`Error: ${error instanceof Error ? error.message : String(error)}`,
-			);
+			dispatch({
+				type: "set-debug-info",
+				debugInfo: `API error: ${error instanceof Error ? error.message : String(error)}`,
+			});
+			dispatch({
+				type: "set-error",
+				error: `Error: ${error instanceof Error ? error.message : String(error)}`,
+			});
 		} finally {
-			setIsLoading(false);
+			dispatch({ type: "set-is-loading", isLoading: false });
 		}
 	};
 
@@ -154,12 +237,15 @@ export default function Chat() {
 			gap={1}
 			margin={0}
 		>
-			{DEBUG && debugInfo ? <DebugBox message={debugInfo} /> : null}
-			{error ? <ErrorBox message={error} /> : null}
-			<MessagesList messages={messages} streamingResponse={streamingResponse} />
-			{isLoading ? (
-				<Box gap={1}>
-					<Box width={3}>
+			{DEBUG && state.debugInfo ? <DebugBox message={state.debugInfo} /> : null}
+			{state.error ? <ErrorBox message={state.error} /> : null}
+			<MessagesList
+				messages={state.messages}
+				streamingResponse={state.streamingResponse}
+			/>
+			{state.isLoading ? (
+				<Box gap={2}>
+					<Box width={3} justifyContent="flex-end">
 						<LoadingSpinner />
 					</Box>
 					<Text color="#777" dimColor bold={false}>
@@ -167,7 +253,7 @@ export default function Chat() {
 					</Text>
 				</Box>
 			) : (
-				<PromptInput input={input} />
+				<PromptInput input={state.input} />
 			)}
 			<Footer />
 		</Box>

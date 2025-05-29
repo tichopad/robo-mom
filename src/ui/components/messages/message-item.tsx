@@ -16,35 +16,51 @@ type MessageProps = {
 export default function MessageItem({ message }: MessageProps) {
 	if (message.role === "user") {
 		return (
-			<MessageItemWrapper>
-				<Box width={3}>
+			<Body>
+				<Avatar>
 					<Text color={colors.user} bold>
 						👤
 					</Text>
+				</Avatar>
+				<Box alignItems="flex-start">
+					<Text color={colors.userText} bold>
+						{message.content}
+					</Text>
 				</Box>
-				<Text color={colors.userText} bold>
-					{message.content}
-				</Text>
-			</MessageItemWrapper>
+			</Body>
 		);
 	}
 
 	if (message.role === "assistant") {
 		return (
-			<MessageItemWrapper>
-				<Box width={4}>
+			<Body>
+				<Avatar>
 					<Text color={colors.assistant} bold>
 						🤖
 					</Text>
+				</Avatar>
+				<Box alignItems="flex-start">
+					<Text color={colors.assistantText}>{message.content}</Text>
 				</Box>
-				<Text color={colors.assistantText}>{message.content}</Text>
-			</MessageItemWrapper>
+			</Body>
 		);
 	}
 
 	return null;
 }
 
-function MessageItemWrapper({ children }: { children: React.ReactNode }) {
-	return <Box gap={1}>{children}</Box>;
+function Avatar({ children }: { children: React.ReactNode }) {
+	return (
+		<Box width={5} alignItems="flex-start" justifyContent="center">
+			{children}
+		</Box>
+	);
+}
+
+function Body({ children }: { children: React.ReactNode }) {
+	return (
+		<Box alignItems="flex-start" justifyContent="flex-start">
+			{children}
+		</Box>
+	);
 }

@@ -1,6 +1,11 @@
 /**
  * Given input text and a character limit, splits the text into sizeable chunks.
  * If overlap's provided, chunks overlap by a number of characters
+ *
+ * @param text - The text to chunk.
+ * @param charLimit - The maximum number of characters per chunk.
+ * @param overlap - The number of characters to overlap between chunks.
+ * @returns An array of chunks.
  */
 export function chunkText(
 	text: string,
@@ -24,6 +29,13 @@ export type Chunk = {
 	index: number; // Index of the chunk in the processing sequence
 };
 
+/**
+ * Chunks markdown text into smaller chunks isolated semantically.
+ *
+ * @param text - The markdown text to chunk.
+ * @param charLimit - The maximum number of characters per chunk.
+ * @returns An array of chunks.
+ */
 export function chunkMarkdown(text: string, charLimit: number): Chunk[] {
 	// If text fits in character limit, return it as a single chunk
 	if (text.length <= charLimit) {

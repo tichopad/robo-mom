@@ -1,5 +1,4 @@
 import { Box } from "ink";
-import { useChat } from "../../chat/context.ts";
 import type { Message } from "../../types.ts";
 import MessageItem from "./message-item.tsx";
 
