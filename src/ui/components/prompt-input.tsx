@@ -1,5 +1,5 @@
-import { Box, Text, Transform } from "ink";
-import { useEffect, useState } from "react";
+import { Box, Text } from "ink";
+import BlinkingCursor from "./blinking-cursor";
 
 type Props = {
 	input: string;
@@ -19,23 +19,5 @@ export default function PromptInput({ input }: Props) {
 			</Box>
 			<BlinkingCursor />
 		</Box>
-	);
-}
-
-function BlinkingCursor() {
-	const [isVisible, setIsVisible] = useState(true);
-
-	useEffect(() => {
-		const interval = setInterval(() => {
-			setIsVisible((prev) => !prev);
-		}, 500);
-
-		return () => clearInterval(interval);
-	}, []);
-
-	return (
-		<Transform transform={(text) => (isVisible ? text : " ")}>
-			<Text color="#5ac8fa">|</Text>
-		</Transform>
 	);
 }

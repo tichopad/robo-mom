@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import { streamText, tool } from "ai";
 import { Box, Text, useApp, useInput } from "ink";
 import { useReducer, useState } from "react";
 import DebugBox from "./components/debug-box.tsx";
@@ -10,8 +10,34 @@ import MessagesList from "./components/messages/messages-list.tsx";
 import PromptInput from "./components/prompt-input.tsx";
 import type { Message } from "./types.ts";
 import { createRandomString } from "./utils.ts";
+import { z } from "zod";
+import { queryDocuments } from "../query-documents.ts";
 
 const DEBUG = true;
+
+const aboutUser = tool({
+	description: "Basic information about the user making the query.",
+	parameters: z.object({
+		name: z.string().describe("Name of the user."),
+	}),
+	// TODO: Implement this (search notes looking for chunks with a corresponding frontmatter attribute, e.g. "tags: [about-me]")
+	execute: async ({ name }) => {
+		return {
+			name,
+			info: "The user's 33 year old developer from Ostrava, Czechia. His name is Michael.",
+		};
+	},
+});
+
+const searchNotes = tool({
+	description: "Search the user's notes about a given query.",
+	parameters: z.object({
+		query: z.string().describe("The query to search for."),
+	}),
+	execute: ({ query }) => {
+		return queryDocuments(query);
+	},
+});
 
 // Test data
 const testMessages: Message[] = [
@@ -180,6 +206,14 @@ export default function Chat() {
 			const { textStream } = streamText({
 				model: openai("gpt-3.5-turbo"),
 				messages: allMessages,
+				system:
+					"You are a helpful assistant that can search for notes and answer questions about them." +
+					"Assume that the user is the author of the notes you have access to unless the note explicitly says otherwise.",
+				tools: {
+					// aboutUser,
+					searchNotes,
+				},
+				maxSteps: 2,
 			});
 
 			// setDebugInfo("Stream connected, receiving tokens...");

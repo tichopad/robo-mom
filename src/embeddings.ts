@@ -16,10 +16,13 @@ export async function generateEmbedding(
 
 	if (!extractorNomicV1) {
 		logger.debug("Initializing 'nomic-ai/nomic-embed-text-v1' extractor");
-		extractorNomicV1 = await pipeline<"feature-extraction">(
-			"feature-extraction",
-			"nomic-ai/nomic-embed-text-v1",
-		);
+		// onnx logs random shit if it can't detect the GPU
+		extractorNomicV1 = await withSuppressedLogs(() => {
+			return pipeline<"feature-extraction">(
+				"feature-extraction",
+				"nomic-ai/nomic-embed-text-v1",
+			);
+		});
 	} else {
 		logger.debug(
 			"'nomic-ai/nomic-embed-text-v1' extractor already initialized",
@@ -40,4 +43,21 @@ export async function generateEmbedding(
 	);
 
 	return flatEmbeddings;
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+type AsyncTask = (...args: any[]) => Promise<any>;
+
+async function withSuppressedLogs<T extends AsyncTask>(
+	task: T,
+): Promise<ReturnType<T>> {
+	const originalConsoleLog = console.log;
+	const originalConsoleWarn = console.warn;
+	console.log = () => {};
+	console.warn = () => {};
+	const result = await task();
+	console.log = originalConsoleLog;
+	console.warn = originalConsoleWarn;
+
+	return result;
 }
