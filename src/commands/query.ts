@@ -24,7 +24,8 @@ export default defineCommand({
 		// TODO: Stream the response
 		const { text, toolCalls, toolResults } = await generateText({
 			model: openai("o4-mini"),
-			system: 'You are a helpful assistant that can search for notes and answer questions about them.',
+			system:
+				"You are a helpful assistant that can search for notes and answer questions about them.",
 			tools: {
 				aboutUser,
 				searchNotes,
@@ -33,7 +34,7 @@ export default defineCommand({
 			prompt: query,
 		});
 
-		console.log(text)
+		console.log(text);
 	},
 });
 

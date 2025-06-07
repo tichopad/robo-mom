@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Transform, Text } from "ink";
+import { Text, Transform } from "ink";
+import { useEffect, useState } from "react";
 
 export default function BlinkingCursor() {
 	const [isVisible, setIsVisible] = useState(true);

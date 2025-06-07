@@ -1,16 +1,16 @@
 import { Box, Text, useApp, useInput } from "ink";
-import {
-	appendInput,
-	deleteInputTail,
-	sendUserInputToLLM,
-	useChatStore,
-} from "./store.ts";
 import DebugBox from "../components/debug-box.tsx";
 import { ErrorBox } from "../components/error-box.tsx";
 import Footer from "../components/footer.tsx";
 import { LoadingSpinner } from "../components/loading-spinner.tsx";
 import MessagesList from "../components/messages/messages-list.tsx";
 import PromptInput from "../components/prompt-input.tsx";
+import {
+	appendInput,
+	deleteInputTail,
+	sendUserInputToLLM,
+	useChatStore,
+} from "./store.ts";
 
 const DEBUG = true;
 

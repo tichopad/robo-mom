@@ -1,10 +1,10 @@
+import { openai } from "@ai-sdk/openai";
+import { streamText, tool } from "ai";
 import { proxy, useSnapshot } from "valtio";
+import z from "zod";
+import { queryDocuments } from "../../query-documents";
 import type { Message } from "../types";
 import { createRandomString } from "../utils";
-import { queryDocuments } from "../../query-documents";
-import z from "zod";
-import { streamText, tool } from "ai";
-import { openai } from "@ai-sdk/openai";
 
 // Test data
 const testMessages: Message[] = [
@@ -91,7 +91,7 @@ export async function sendUserInputToLLM(): Promise<void> {
 		return;
 	}
 
-  // Append input as a user message
+	// Append input as a user message
 
 	store.messages.push({
 		role: "user",
@@ -99,14 +99,14 @@ export async function sendUserInputToLLM(): Promise<void> {
 		id: createRandomString(),
 	});
 
-  // Clear error and input
+	// Clear error and input
 
 	store.error = null;
 	store.input = "";
 	store.streamingResponse = "";
 
 	try {
-    // Send request to OpenAI
+		// Send request to OpenAI
 		store.isLoading = true;
 		logDebugInfo("Sending request to OpenAI...");
 		const { textStream } = streamText({
@@ -126,7 +126,7 @@ export async function sendUserInputToLLM(): Promise<void> {
 
 		logDebugInfo("Stream started, receiving tokens...");
 
-    // Stream the response in
+		// Stream the response in
 		let chunkCount = 0;
 		for await (const chunk of textStream) {
 			store.streamingResponse += chunk;
@@ -139,13 +139,13 @@ export async function sendUserInputToLLM(): Promise<void> {
 			`Error: ${error instanceof Error ? error.message : String(error)}`,
 		);
 	} finally {
-    // Compose the whole response as an assistant message
+		// Compose the whole response as an assistant message
 		store.messages.push({
 			role: "assistant",
 			content: store.streamingResponse.trim(),
 			id: createRandomString(),
 		});
-    // Clear the streaming response once we're done with it
+		// Clear the streaming response once we're done with it
 		store.streamingResponse = "";
 		store.debugInfo = null;
 		store.isLoading = false;
