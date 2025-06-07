@@ -3,7 +3,7 @@ import type { Message } from "../../types.ts";
 import MessageItem from "./message-item.tsx";
 
 type Props = {
-	messages: Message[];
+	messages: readonly Message[];
 	streamingResponse: string;
 };
 

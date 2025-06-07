@@ -1,5 +1,5 @@
 import { render } from "ink";
-import Chat from "./ui/chat.tsx";
+import Chat from "./ui/chat/chat.tsx";
 
 const App = () => {
 	return <Chat />;
