@@ -54,19 +54,21 @@ export default function Chat() {
 				messages={store.messages}
 				streamingResponse={store.streamingResponse}
 			/>
-			{store.isLoading ? (
-				<Box gap={2}>
-					<Box width={3} justifyContent="flex-end">
-						<LoadingSpinner />
-					</Box>
-					<Text color="#777" dimColor bold={false}>
-						thinking...
-					</Text>
-				</Box>
-			) : (
-				<PromptInput input={store.input} />
-			)}
+			{store.isLoading ? <LoadingBar /> : <PromptInput input={store.input} />}
 			<Footer />
+		</Box>
+	);
+}
+
+function LoadingBar() {
+	return (
+		<Box gap={2}>
+			<Box width={3} justifyContent="flex-end">
+				<LoadingSpinner />
+			</Box>
+			<Text color="#777" dimColor bold={false}>
+				thinking...
+			</Text>
 		</Box>
 	);
 }

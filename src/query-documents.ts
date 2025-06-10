@@ -51,7 +51,7 @@ export async function queryDocuments(query: string) {
 		.from(notesTable)
 		.where(gt(contentSimilarity, 0.2))
 		.orderBy((result) => desc(result.similarity))
-		.limit(5);
+		.limit(10);
 
 	const allResults = [...filenameResults, ...contentResults];
 

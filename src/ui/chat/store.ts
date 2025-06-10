@@ -76,13 +76,25 @@ const searchNotes = tool({
 	parameters: z.object({
 		query: z.string().describe("The query to search for."),
 	}),
-	execute: ({ query }) => {
-		return queryDocuments(query);
+	execute: async ({ query }) => {
+		store.debugInfo = `Searching notes for query: ${query}`;
+		const documents = await queryDocuments(query);
+		store.debugInfo = `Found ${documents.length} documents`;
+		return documents
+			.toSorted((a, b) => b.similarity - a.similarity)
+			.map(
+				(doc) => `
+					<filename>${doc.filename}</filename>
+					<content>${doc.text}</content>
+					<frontmatter>${JSON.stringify(doc.frontmatter_attributes)}</frontmatter>
+				`,
+			);
 	},
 });
 
 export async function sendUserInputToLLM(): Promise<void> {
-	if (store.input.trim() === "") {
+	const input = store.input.trim();
+	if (input === "") {
 		logDebugInfo("Input is empty, skipping request.");
 		return;
 	}
@@ -95,7 +107,7 @@ export async function sendUserInputToLLM(): Promise<void> {
 
 	store.messages.push({
 		role: "user",
-		content: store.input,
+		content: input,
 		id: createRandomString(),
 	});
 
