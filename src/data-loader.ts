@@ -6,7 +6,7 @@ import { chunkMarkdown } from "./chunk-text.ts";
 import { db } from "./db/client.ts";
 import { notesTable } from "./db/schema.ts";
 import { generateEmbedding } from "./embeddings.ts";
-import { logger } from "./logger.ts";
+import logger from "./logger.ts";
 
 export async function loadMarkdownFilesFromGlob(
 	globPath: string | string[],

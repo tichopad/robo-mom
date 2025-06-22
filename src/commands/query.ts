@@ -2,7 +2,7 @@ import { openai } from "@ai-sdk/openai";
 import { generateText, tool } from "ai";
 import { defineCommand } from "citty";
 import { z } from "zod";
-import { logger } from "../logger.ts";
+import logger from "../logger.ts";
 import { queryDocuments } from "../query-documents.ts";
 
 export default defineCommand({

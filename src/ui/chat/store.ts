@@ -2,9 +2,10 @@ import { openai } from "@ai-sdk/openai";
 import { streamText, tool } from "ai";
 import { proxy, useSnapshot } from "valtio";
 import z from "zod";
-import { queryDocuments } from "../../query-documents";
-import type { Message } from "../types";
-import { createRandomString } from "../utils";
+import { queryDocuments } from "../../query-documents.ts";
+import type { Message } from "../types.ts";
+import { createRandomString } from "../utils.ts";
+import logger from "../../logger.ts";
 
 // Test data
 const testMessages: Message[] = [
@@ -57,8 +58,9 @@ export function useChatStore() {
 
 // -- Actions --
 
-const aboutUser = tool({
-	description: "Basic information about the user making the query.",
+const aboutAuthor = tool({
+	description:
+		"Basic information about the user making the query (author of the notes).",
 	parameters: z.object({
 		name: z.string().describe("Name of the user."),
 	}),
@@ -66,7 +68,7 @@ const aboutUser = tool({
 	execute: async ({ name }) => {
 		return {
 			name,
-			info: "The user's 33 year old developer from Ostrava, Czechia. His name is Michael.",
+			info: "The notes author is 33 year old developer from Ostrava, Czechia. His name is Michael.",
 		};
 	},
 });
@@ -80,18 +82,24 @@ const searchNotes = tool({
 		store.debugInfo = `Searching notes for query: ${query}`;
 		const documents = await queryDocuments(query);
 		store.debugInfo = `Found ${documents.length} documents`;
+		logger.debug("Found %d documents", documents.length);
 		return documents
 			.toSorted((a, b) => b.similarity - a.similarity)
 			.map(
-				(doc) => `
+				(doc, i) => `
+				<file-${i}>
 					<filename>${doc.filename}</filename>
 					<content>${doc.text}</content>
 					<frontmatter>${JSON.stringify(doc.frontmatter_attributes)}</frontmatter>
+				</file-${i}>
 				`,
 			);
 	},
 });
 
+/**
+ * Send the current user input to the LLM and pipes the streaming response to the store.
+ */
 export async function sendUserInputToLLM(): Promise<void> {
 	const input = store.input.trim();
 	if (input === "") {
@@ -127,10 +135,20 @@ export async function sendUserInputToLLM(): Promise<void> {
 				role: msg.role,
 				content: msg.content,
 			})),
+			// TODO: move to OTel -> AI SDK has 1st class support for it
+			onStepFinish: (stepResult) => {
+				for (const toolResult of stepResult.toolResults) {
+					logger.debug("Tool name: %s", toolResult.toolName);
+					logger.debug("Tool args: %o", toolResult.args);
+					logger.debug("Tool result type: %s", toolResult.type);
+					logger.debug("Tool result: %o", toolResult.result);
+				}
+			},
 			system:
 				"You are a helpful assistant that can search for notes and answer questions about them." +
 				"Assume that the user is the author of the notes you have access to unless the note explicitly says otherwise.",
 			tools: {
+				aboutAuthor,
 				searchNotes,
 			},
 			maxSteps: 2,
@@ -164,18 +182,30 @@ export async function sendUserInputToLLM(): Promise<void> {
 	}
 }
 
+/**
+ * Log a debug message to the store.
+ */
 export function logDebugInfo(message: string): void {
 	store.debugInfo = message;
 }
 
+/**
+ * Log an error to the store.
+ */
 export function logError(error: string): void {
 	store.error = error;
 }
 
+/**
+ * Append a string to the input.
+ */
 export function appendInput(input: string): void {
 	store.input += input;
 }
 
+/**
+ * Delete the last character of the input.
+ */
 export function deleteInputTail(): void {
 	store.input = store.input.slice(0, -1);
 }
