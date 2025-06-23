@@ -8,7 +8,6 @@
 		"check:ts": "tsc",
 		"db:migrate": "drizzle-kit generate && tsx --env-file=.env ./src/db/migrate.ts",
 		"db:cli": "tsx --env-file=.env ./src/db-cli.ts",
-		"start": "tsx --env-file=.env ./src/main.ts",
 		"cli": "tsx --env-file=.env ./src/cli.ts",
 		"ink:new": "tsx --watch --env-file=.env ./src/app.tsx"
 	},
