@@ -1,12 +1,12 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { extract as extractFrontmatter } from "@std/front-matter/any";
 import { test as testFrontmatter } from "@std/front-matter/test";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { chunkMarkdown } from "./chunk-text.ts";
 import { db } from "./db/client.ts";
 import { notesTable } from "./db/schema.ts";
 import { generateEmbedding } from "./embeddings.ts";
-import logger from "./logger.ts";
+import { logger } from "./logger.ts";
 
 export async function loadMarkdownFilesFromGlob(
 	globPath: string | string[],
@@ -31,7 +31,7 @@ export async function loadMarkdownFilesFromGlob(
 		count++;
 	}
 
-	logger.debug("Loaded %d Markdown files", count);
+	logger.info("Loaded %d Markdown files", count);
 }
 
 export async function loadMarkdownFileToDb(filePath: string): Promise<void> {
@@ -41,7 +41,7 @@ export async function loadMarkdownFileToDb(filePath: string): Promise<void> {
 
 	const bodyChunks = chunkMarkdown(body, 12_000);
 
-	logger.debug(
+	logger.info(
 		"Chunked markdown file: %s (%d chunks)",
 		filePath,
 		bodyChunks.length,

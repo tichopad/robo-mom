@@ -1,9 +1,9 @@
+import { defineCommand, runMain } from "citty";
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
-import { defineCommand, runMain } from "citty";
 import { db } from "./db/client.ts";
-import logger from "./logger.ts";
+import { logger } from "./logger.ts";
 
 const main = defineCommand({
 	meta: {

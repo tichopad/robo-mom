@@ -1,8 +1,10 @@
 import { render } from "ink";
 import Chat from "./ui/chat/chat.tsx";
 
-const App = () => {
+function App() {
 	return <Chat />;
-};
+}
 
-render(<App />);
+export function runApp() {
+	render(<App />);
+}

@@ -6,7 +6,7 @@ import {
 	tool,
 } from "ai";
 import { z } from "zod";
-import logger from "../../logger.ts";
+import { logger } from "../../logger.ts";
 import { queryDocuments } from "../../query-documents.ts";
 import { store } from "./store.ts";
 

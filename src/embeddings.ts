@@ -2,7 +2,7 @@ import {
 	type FeatureExtractionPipeline,
 	pipeline,
 } from "@huggingface/transformers";
-import logger from "./logger.ts";
+import { logger } from "./logger.ts";
 
 let extractorNomicV1: FeatureExtractionPipeline | null = null;
 

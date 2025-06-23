@@ -8,8 +8,7 @@
 		"check:ts": "tsc",
 		"db:migrate": "drizzle-kit generate && tsx --env-file=.env ./src/db/migrate.ts",
 		"db:cli": "tsx --env-file=.env ./src/db-cli.ts",
-		"cli": "tsx --env-file=.env ./src/cli.ts",
-		"ink:new": "tsx --watch --env-file=.env ./src/app.tsx"
+		"cli": "tsx --env-file=.env ./src/cli.ts"
 	},
 	"packageManager": "pnpm@10.12.1",
 	"dependencies": {

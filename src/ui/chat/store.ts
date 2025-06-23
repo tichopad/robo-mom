@@ -1,14 +1,5 @@
-import { openai } from "@ai-sdk/openai";
-import {
-	type Message as AiMessage,
-	type CoreMessage,
-	streamText,
-	tool,
-} from "ai";
 import { proxy, useSnapshot } from "valtio";
-import z from "zod";
-import logger from "../../logger.ts";
-import { queryDocuments } from "../../query-documents.ts";
+import { logger } from "../../logger.ts";
 import type { Message } from "../types.ts";
 import { createRandomString } from "../utils.ts";
 import { sendRequestToLLM } from "./llm.ts";
