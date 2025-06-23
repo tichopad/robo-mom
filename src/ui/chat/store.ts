@@ -1,38 +1,17 @@
 import { openai } from "@ai-sdk/openai";
-import { streamText, tool } from "ai";
+import {
+	type Message as AiMessage,
+	type CoreMessage,
+	streamText,
+	tool,
+} from "ai";
 import { proxy, useSnapshot } from "valtio";
 import z from "zod";
+import logger from "../../logger.ts";
 import { queryDocuments } from "../../query-documents.ts";
 import type { Message } from "../types.ts";
 import { createRandomString } from "../utils.ts";
-import logger from "../../logger.ts";
-
-// Test data
-const testMessages: Message[] = [
-	{
-		role: "user",
-		content: "whats PFOS stand for in terms of chemicals?",
-		id: "1",
-	},
-	{
-		role: "assistant",
-		content:
-			"PFOS stands for Perfluorooctanesulfonic acid. It is a man-made chemical compound that belongs to the group of per- and polyfluoroalkyl substances (PFAS). PFOS is known for its persistence in the environment and potential harmful effects on human health.",
-		id: "2",
-	},
-	{
-		role: "user",
-		content: "What is the capital of France?",
-		id: "3",
-	},
-	{
-		role: "assistant",
-		content: "PFOS is harmful effects on human health.",
-		id: "5",
-	},
-];
-
-// -- Store --
+import { sendRequestToLLM } from "./llm.ts";
 
 type Store = {
 	messages: Message[];
@@ -41,86 +20,55 @@ type Store = {
 	error: string | null;
 	debugInfo: string | null;
 	streamingResponse: string;
+	currentRequestId: string | null;
 };
 
-const store = proxy<Store>({
+export const store = proxy<Store>({
 	messages: [],
 	input: "",
 	isLoading: false,
 	error: null,
 	debugInfo: null,
 	streamingResponse: "",
+	currentRequestId: null,
 });
 
 export function useChatStore() {
 	return useSnapshot(store);
 }
 
-// -- Actions --
-
-const aboutAuthor = tool({
-	description:
-		"Basic information about the user making the query (author of the notes).",
-	parameters: z.object({
-		name: z.string().describe("Name of the user."),
-	}),
-	// TODO: Implement this (search notes looking for chunks with a corresponding frontmatter attribute, e.g. "tags: [about-me]")
-	execute: async ({ name }) => {
-		return {
-			name,
-			info: "The notes author is 33 year old developer from Ostrava, Czechia. His name is Michael.",
-		};
-	},
-});
-
-const searchNotes = tool({
-	description: "Search the user's notes about a given query.",
-	parameters: z.object({
-		query: z.string().describe("The query to search for."),
-	}),
-	execute: async ({ query }) => {
-		store.debugInfo = `Searching notes for query: ${query}`;
-		const documents = await queryDocuments(query);
-		store.debugInfo = `Found ${documents.length} documents`;
-		logger.debug("Found %d documents", documents.length);
-		return documents
-			.toSorted((a, b) => b.similarity - a.similarity)
-			.map(
-				(doc, i) => `
-				<file-${i}>
-					<filename>${doc.filename}</filename>
-					<content>${doc.text}</content>
-					<frontmatter>${JSON.stringify(doc.frontmatter_attributes)}</frontmatter>
-				</file-${i}>
-				`,
-			);
-	},
-});
-
 /**
  * Send the current user input to the LLM and pipes the streaming response to the store.
  */
 export async function sendUserInputToLLM(): Promise<void> {
+	// Generate a request ID for this conversation turn
+	const userMessageId = createRandomString();
+	const requestId = createRandomString();
+	store.currentRequestId = requestId;
+	const logWithRequestId = logger.child({ requestId });
+
 	const input = store.input.trim();
 	if (input === "") {
-		logDebugInfo("Input is empty, skipping request.");
+		store.error = "Input is empty, skipping request.";
+		logWithRequestId.error("Input is empty, skipping request.");
 		return;
 	}
 	if (!process.env.OPENAI_API_KEY) {
-		logError("OPENAI_API_KEY not found. Please add it to your .env file.");
+		store.error = "OPENAI_API_KEY not found. Please add it to your .env file.";
+		logWithRequestId.error(
+			"OPENAI_API_KEY not found. Please add it to your .env file.",
+		);
 		return;
 	}
 
 	// Append input as a user message
-
 	store.messages.push({
 		role: "user",
 		content: input,
-		id: createRandomString(),
+		id: userMessageId,
 	});
 
 	// Clear error and input
-
 	store.error = null;
 	store.input = "";
 	store.streamingResponse = "";
@@ -128,72 +76,80 @@ export async function sendUserInputToLLM(): Promise<void> {
 	try {
 		// Send request to OpenAI
 		store.isLoading = true;
-		logDebugInfo("Sending request to OpenAI...");
-		const { textStream } = streamText({
-			model: openai("gpt-3.5-turbo"),
-			messages: store.messages.map((msg) => ({
-				role: msg.role,
-				content: msg.content,
-			})),
-			// TODO: move to OTel -> AI SDK has 1st class support for it
-			onStepFinish: (stepResult) => {
-				for (const toolResult of stepResult.toolResults) {
-					logger.debug("Tool name: %s", toolResult.toolName);
-					logger.debug("Tool args: %o", toolResult.args);
-					logger.debug("Tool result type: %s", toolResult.type);
-					logger.debug("Tool result: %o", toolResult.result);
-				}
-			},
-			system:
-				"You are a helpful assistant that can search for notes and answer questions about them." +
-				"Assume that the user is the author of the notes you have access to unless the note explicitly says otherwise.",
-			tools: {
-				aboutAuthor,
-				searchNotes,
-			},
-			maxSteps: 2,
-		});
+		const messages = store.messages.map((msg) => ({
+			role: msg.role,
+			content: msg.content,
+		}));
 
-		logDebugInfo("Stream started, receiving tokens...");
+		store.debugInfo = "Sending request to OpenAI...";
+
+		const { textStream } = sendRequestToLLM(messages);
+
+		store.debugInfo = "Stream started, receiving tokens...";
+		logWithRequestId.debug("Stream started, receiving tokens...");
 
 		// Stream the response in
 		let chunkCount = 0;
+		let totalTokens = 0;
 		for await (const chunk of textStream) {
 			store.streamingResponse += chunk;
 			chunkCount++;
-			logDebugInfo(`Received chunk ${chunkCount}`);
+			totalTokens += chunk.length;
+
+			// Log every 10th chunk to avoid spam while still providing progress info
+			if (chunkCount % 10 === 0) {
+				store.debugInfo = `Received chunk ${chunkCount}`;
+			}
 		}
+
+		// Log the final response with structured data
+		const assistantMessageId = createRandomString();
+		logWithRequestId.debug("LLM response completed", {
+			assistantMessageId,
+			responseLength: store.streamingResponse.length,
+			totalChunks: chunkCount,
+			approximateTokens: totalTokens,
+			isComplete: true,
+		});
+
+		// Log the full response content for debugging
+		logWithRequestId.debug("LLM response content", {
+			assistantMessageId,
+			content: store.streamingResponse.trim(),
+		});
 	} catch (error) {
-		logDebugInfo("API request failed");
-		logError(
-			`Error: ${error instanceof Error ? error.message : String(error)}`,
-		);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+
+		// Log the error with structured data
+		logWithRequestId.error("LLM request failed", {
+			error: errorMessage,
+			errorType: error instanceof Error ? error.constructor.name : "Unknown",
+			userInput: input,
+			conversationLength: store.messages.length,
+		});
+
+		store.error = errorMessage;
 	} finally {
 		// Compose the whole response as an assistant message
+		const assistantMessageId = createRandomString();
 		store.messages.push({
 			role: "assistant",
 			content: store.streamingResponse.trim(),
-			id: createRandomString(),
+			id: assistantMessageId,
 		});
+
+		// Log the conversation turn completion
+		logWithRequestId.debug("Conversation turn completed", {
+			assistantMessageId,
+			finalConversationLength: store.messages.length,
+			responseWasStreamed: store.streamingResponse.length > 0,
+		});
+
 		// Clear the streaming response once we're done with it
 		store.streamingResponse = "";
 		store.debugInfo = null;
 		store.isLoading = false;
 	}
-}
-
-/**
- * Log a debug message to the store.
- */
-export function logDebugInfo(message: string): void {
-	store.debugInfo = message;
-}
-
-/**
- * Log an error to the store.
- */
-export function logError(error: string): void {
-	store.error = error;
 }
 
 /**
