@@ -31,9 +31,9 @@ export async function queryDocuments(query: string) {
 			similarity: filenameSimilarity,
 		})
 		.from(notesTable)
-		.where(gt(filenameSimilarity, 0.3))
+		.where(gt(filenameSimilarity, 0.4))
 		.orderBy((result) => desc(result.similarity))
-		.limit(5);
+		.limit(10);
 
 	const contentSimilarity = sql<number>`1 - (${cosineDistance(
 		notesTable.text_vector,
@@ -49,9 +49,9 @@ export async function queryDocuments(query: string) {
 			similarity: contentSimilarity,
 		})
 		.from(notesTable)
-		.where(gt(contentSimilarity, 0.2))
+		.where(gt(contentSimilarity, 0.3))
 		.orderBy((result) => desc(result.similarity))
-		.limit(10);
+		.limit(15);
 
 	const allResults = [...filenameResults, ...contentResults];
 
