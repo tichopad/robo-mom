@@ -1,7 +1,4 @@
 import { defineCommand, runMain } from "citty";
-import { runApp } from "./app.tsx";
-import loadFilesCommand from "./commands/load-files.ts";
-import chatCommand from "./commands/chat.ts";
 
 const main = defineCommand({
 	meta: {
@@ -10,8 +7,8 @@ const main = defineCommand({
 		description: "Your personal AI notes assistant",
 	},
 	subCommands: {
-		chat: chatCommand,
-		"load-files": loadFilesCommand,
+		chat: import("./commands/chat.ts").then((m) => m.default),
+		"load-files": import("./commands/load-files.ts").then((m) => m.default),
 	},
 });
 

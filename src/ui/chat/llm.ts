@@ -79,8 +79,7 @@ const searchNotes = tool({
 			toolName: "searchNotes",
 			query,
 			documentsFound: documents.length,
-			topSimilarityScore: sortedDocuments[0]?.similarity || 0,
-			documentFilenames: sortedDocuments.map((doc) => doc.filename),
+			sortedDocuments,
 		});
 
 		return sortedDocuments.map(
@@ -155,9 +154,7 @@ export function sendRequestToLLM(
 			"Follow these rules:\n" +
 			"1. If you used the searchNotes tool for a query, always link the sources in the response.\n" +
 			"2. Aim for readability and clarity. Avoid overly verbose responses.\n" +
-			"3. Please deliver the response in plain text without any Markdown or formatting. Provide the output as raw text.\n" +
-			"4. Use emojis to make the response more engaging and readable.\n" +
-			"5. If you are not sure about the answer, say so.",
+			"3. If you are not sure about the answer, say so.",
 		tools: {
 			aboutAuthor,
 			searchNotes,

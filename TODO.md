@@ -2,6 +2,7 @@
 
 - [ ] Looks like there's a **memory leak** in the data loading process -> verify and fix
 - [ ] Use a specific console print function to log UI stuff instead of the logger -> logger should only serve for debugging purposes and not user-facing stuff
+- [ ] Use Ink's community components for the UI
 - [x] Drop all chunks stored in DB when a file changes
 - [ ] Clean and update dependencies
 - [ ] Build the app as a single binary and/or ship to NPM (or JSR)
