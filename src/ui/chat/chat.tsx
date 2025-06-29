@@ -9,6 +9,7 @@ import {
 	appendInput,
 	deleteInputTail,
 	sendUserInputToLLM,
+	startNewConversation,
 	useChatStore,
 } from "./store.ts";
 
@@ -24,6 +25,11 @@ export default function Chat() {
 
 		if (key.return && store.input.trim() === "/exit") {
 			app.exit();
+			return;
+		}
+
+		if (key.ctrl && inputChar === "n") {
+			startNewConversation();
 			return;
 		}
 

@@ -156,3 +156,16 @@ export function appendInput(input: string): void {
 export function deleteInputTail(): void {
 	store.input = store.input.slice(0, -1);
 }
+
+/**
+ * Start a new conversation by clearing all messages and resetting the state.
+ */
+export function startNewConversation(): void {
+	store.messages = [];
+	store.input = "";
+	store.isLoading = false;
+	store.error = null;
+	store.debugInfo = null;
+	store.streamingResponse = "";
+	store.currentRequestId = null;
+}

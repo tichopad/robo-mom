@@ -4,7 +4,7 @@ export default function Footer() {
 	return (
 		<Box justifyContent="center">
 			<Text color="#777" dimColor>
-				enter to send · /exit to quit · ctrl+c to exit
+				enter to send · ctrl+n for new chat · /exit to quit · ctrl+c to exit
 			</Text>
 		</Box>
 	);

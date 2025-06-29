@@ -85,9 +85,9 @@ const searchNotes = tool({
 		return sortedDocuments.map(
 			(doc, i) => `
 				<file-${i}>
-					<filename>${doc.filename}</filename>
+					<path>${doc.filename}</path>
 					<content>${doc.text}</content>
-					<frontmatter>${JSON.stringify(doc.frontmatter_attributes)}</frontmatter>
+					<meta>${JSON.stringify(doc.frontmatter_attributes)}</meta>
 				</file-${i}>
 				`,
 		);
@@ -149,8 +149,10 @@ export function sendRequestToLLM(
 			}
 		},
 		system:
+			// biome-ignore lint/style/useTemplate: It's more readable this way without having to use dedent
 			"You are a helpful assistant that can search for notes and answer questions about them." +
 			"Assume that the user is the author of the notes you have access to unless the note explicitly says otherwise." +
+			`Today's date is ${new Date().toLocaleDateString()}.` +
 			"Follow these rules:\n" +
 			"1. If you used the searchNotes tool for a query, always link the sources in the response.\n" +
 			"2. Aim for readability and clarity. Avoid overly verbose responses.\n" +
