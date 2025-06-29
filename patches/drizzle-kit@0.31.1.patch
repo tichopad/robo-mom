@@ -1,0 +1,14 @@
+diff --git a/bin.cjs b/bin.cjs
+index 99b0c1ee9d7c9fa0db37e40550fb2ef4e41acee5..48909cb07ea9b16ca2096564f80b839f5e8c5221 100755
+--- a/bin.cjs
++++ b/bin.cjs
+@@ -78747,7 +78747,8 @@ var init_connections = __esm({
+           const { PGlite, types: types3 } = await import("@electric-sql/pglite");
+           const { drizzle } = await import("drizzle-orm/pglite");
+           const { migrate: migrate2 } = await import("drizzle-orm/pglite/migrator");
+-          const pglite = new PGlite(normalisePGliteUrl(credentials2.url));
++          const { vector } = await import('@electric-sql/pglite/vector');
++          const pglite = new PGlite(normalisePGliteUrl(credentials2.url), { extensions: { vector } });
+           await pglite.waitReady;
+           const drzl = drizzle(pglite);
+           const migrateFn = async (config) => {

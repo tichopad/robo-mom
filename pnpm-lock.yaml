@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  drizzle-kit@0.31.1:
+    hash: 9337550f2c5e234b6ddf38a7746bab34e2b583c28ae8cffed2f8984ff28255ab
+    path: patches/drizzle-kit@0.31.1.patch
+
 importers:
 
   .:
@@ -37,7 +42,7 @@ importers:
         version: 0.1.6
       drizzle-kit:
         specifier: 0.31.1
-        version: 0.31.1
+        version: 0.31.1(patch_hash=9337550f2c5e234b6ddf38a7746bab34e2b583c28ae8cffed2f8984ff28255ab)
       drizzle-orm:
         specifier: 0.44.2
         version: 0.44.2(@electric-sql/pglite@0.3.0)(@opentelemetry/api@1.9.0)
@@ -1818,7 +1823,7 @@ snapshots:
 
   diff-match-patch@1.0.5: {}
 
-  drizzle-kit@0.31.1:
+  drizzle-kit@0.31.1(patch_hash=9337550f2c5e234b6ddf38a7746bab34e2b583c28ae8cffed2f8984ff28255ab):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
