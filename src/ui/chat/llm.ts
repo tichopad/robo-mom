@@ -109,13 +109,13 @@ export function sendRequestToLLM(
 	logWithRequestId.debug("LLM request initiated", {
 		conversationLength: messages.length,
 		messages,
-		model: "gpt-4o-mini",
+		model: "gpt-4o",
 		maxSteps: 5,
 		availableTools: ["aboutAuthor", "searchNotes"],
 	});
 
 	return streamText({
-		model: openai("gpt-4o-mini"),
+		model: openai("gpt-4o"),
 		messages,
 		onStepFinish: (stepResult) => {
 			// Log each step with structured data
@@ -151,7 +151,13 @@ export function sendRequestToLLM(
 		},
 		system:
 			"You are a helpful assistant that can search for notes and answer questions about them." +
-			"Assume that the user is the author of the notes you have access to unless the note explicitly says otherwise.",
+			"Assume that the user is the author of the notes you have access to unless the note explicitly says otherwise." +
+			"Follow these rules:\n" +
+			"1. If you used the searchNotes tool for a query, always link the sources in the response.\n" +
+			"2. Aim for readability and clarity. Avoid overly verbose responses.\n" +
+			"3. Please deliver the response in plain text without any Markdown or formatting. Provide the output as raw text.\n" +
+			"4. Use emojis to make the response more engaging and readable.\n" +
+			"5. If you are not sure about the answer, say so.",
 		tools: {
 			aboutAuthor,
 			searchNotes,

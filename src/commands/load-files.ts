@@ -10,14 +10,20 @@ export default defineCommand({
 	args: {
 		glob: {
 			type: "positional",
-			description: "Glob pattern for the files to load",
+			// Some shells will interpret the glob pattern and will return array of files
+			// instead of a string if the glob pattern is not wrapped in quotes
+			description:
+				"Path to the files to load (can be a glob pattern wrapped in quotes)",
 			required: true,
+			valueHint: "example_notes/**/*.md",
 		},
 	},
-	async run({ args }) {
+	async run({ args, data, rawArgs, cmd }) {
+		const start = performance.now();
 		logger.debug("Received command to load files for a glob: %s", args.glob);
 		await loadMarkdownFilesFromGlob(args.glob);
-		logger.info("Loading files done.");
+		const end = performance.now();
+		logger.info("Loading files done in %d ms", Math.floor(end - start));
 		return;
 	},
 });

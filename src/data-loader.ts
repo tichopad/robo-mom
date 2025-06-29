@@ -3,6 +3,7 @@ import { test as testFrontmatter } from "@std/front-matter/test";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { setTimeout } from "node:timers/promises";
 import { eq } from "drizzle-orm";
 import { chunkMarkdown } from "./chunk-text.ts";
 import { db } from "./db/client.ts";
@@ -14,26 +15,41 @@ import { performance } from "node:perf_hooks";
 export async function loadMarkdownFilesFromGlob(
 	globPath: string | string[],
 ): Promise<void> {
+	logger.debug("globPath: %o", globPath);
 	logger.debug("Loading Markdown files from glob: %s", globPath);
 
 	let count = 0;
 	let skipped = 0;
 
 	for await (const file of fs.glob(globPath)) {
+		logger.debug("Processing file: '%s'", file);
 		const fileStat = await fs.stat(file);
 
 		if (fileStat.isDirectory()) {
-			logger.debug("Skipping directory: %s", file);
+			logger.debug("Skipping directory: '%s'", file);
 			continue;
 		}
 		if (path.extname(file) !== ".md") {
-			logger.debug("Skipping non-markdown file: %s", file);
+			logger.debug("Skipping non-markdown file: '%s'", file);
+			continue;
+		}
+		// Exclude *.excalidraw.md files
+		if (path.basename(file).endsWith(".excalidraw.md")) {
+			logger.debug("Skipping excalidraw file: '%s'", file);
 			continue;
 		}
 
 		const wasProcessed = await loadMarkdownFileToDb(file);
+		logger.debug(
+			"Processed file: '%s' (changed: %s)",
+			file,
+			wasProcessed ? "true" : "false",
+		);
 		if (wasProcessed) {
 			count++;
+			// Add a small delay to reduce CPU strain during embedding generation
+			// TODO: make sure to use the GPU for embedding generation to improve perf. and remove this delay
+			await setTimeout(200);
 		} else {
 			skipped++;
 		}
@@ -56,7 +72,9 @@ export async function loadMarkdownFileToDb(filePath: string): Promise<boolean> {
 	logger.debug("Processing Markdown file: %s", filePath);
 
 	// Read file content and calculate checksum
-	const fileContent = await fs.readFile(filePath, { encoding: "utf-8" });
+	let fileContent: string | null = await fs.readFile(filePath, {
+		encoding: "utf-8",
+	});
 	const checksum = calculateSHA256(fileContent);
 
 	// Check if file already exists in database with the same checksum
@@ -82,6 +100,7 @@ export async function loadMarkdownFileToDb(filePath: string): Promise<boolean> {
 
 	logger.debug("Loading Markdown file: %s", filePath);
 	const { attrs, body } = extractAttrsAndBody(fileContent);
+	fileContent = null;
 
 	const bodyChunks = chunkMarkdown(body, 12_000);
 
