@@ -12,6 +12,8 @@ export const notesTable = pgTable("notes", {
 	text: text().notNull(),
 	text_vector: vector({ dimensions: 768 }),
 	filename_vector: vector({ dimensions: 768 }),
+	// SHA256 checksum of the original file content
+	checksum: text().notNull(),
 	// Frontmatter metadata parsed from each Markdown file
 	frontmatter_attributes: json(
 		"frontmatter_attributes",

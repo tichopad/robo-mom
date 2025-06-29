@@ -1,20 +1,27 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1745181965757,
-			"tag": "0000_small_gravity",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1745181990359,
-			"tag": "0001_mushy_maximus",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1745181965757,
+      "tag": "0000_small_gravity",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1745181990359,
+      "tag": "0001_mushy_maximus",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1750714886574,
+      "tag": "0002_numerous_mongu",
+      "breakpoints": true
+    }
+  ]
 }
