@@ -1,9 +1,10 @@
-import { defineCommand, runMain } from "citty";
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
+import { defineCommand, runMain } from "citty";
 import { db } from "./db/client.ts";
 import { logger } from "./logger.ts";
+import { print } from "./print.ts";
 
 const main = defineCommand({
 	meta: {
@@ -44,17 +45,17 @@ const main = defineCommand({
 				await saveResultsToFile(result.rows, args.output);
 			}
 		} else {
-			logger.info(
+			print.info(
 				"No query provided. Use --query to execute a query or --interactive for interactive mode.",
 			);
-			logger.info('Example: pnpm db-cli --query "SELECT * FROM notes LIMIT 5"');
+			print.info('Example: pnpm db-cli --query "SELECT * FROM notes LIMIT 5"');
 		}
 	},
 });
 
 async function executeQuery(query: string) {
 	try {
-		logger.info(`Executing query: ${query}`);
+		print.info(`Executing query: ${query}`);
 		const start = performance.now();
 		const result = await db.execute(query);
 		const end = performance.now();
@@ -69,8 +70,8 @@ async function executeQuery(query: string) {
 			console.log("(No rows returned)");
 		}
 
-		logger.info(`Query executed in ${(end - start).toFixed(2)}ms`);
-		logger.info(`Rows affected: ${result.rows.length}`);
+		print.success(`Query executed in ${(end - start).toFixed(2)}ms`);
+		print.info(`Rows affected: ${result.rows.length}`);
 
 		return result;
 	} catch (error) {
@@ -90,7 +91,7 @@ async function saveResultsToFile(
 	try {
 		const absolutePath = resolve(outputPath);
 		await writeFile(absolutePath, JSON.stringify(rows, null, 2));
-		logger.info(`Results saved to: ${absolutePath}`);
+		print.success(`Results saved to: ${absolutePath}`);
 	} catch (error) {
 		if (error instanceof Error) {
 			logger.error(`Error saving results to file: ${error.message}`);
@@ -181,10 +182,10 @@ async function startInteractiveMode() {
 		output: process.stdout,
 	});
 
-	logger.info(
+	print.info(
 		"Interactive SQL shell started. Type your SQL queries and press Enter.",
 	);
-	logger.info("Type 'exit' or 'quit' to exit the shell.");
+	print.info("Type 'exit' or 'quit' to exit the shell.");
 
 	while (true) {
 		const query = await readline.question("\nSQL> ");
@@ -201,7 +202,7 @@ async function startInteractiveMode() {
 	}
 
 	readline.close();
-	logger.info("Interactive SQL shell closed.");
+	print.success("Interactive SQL shell closed.");
 }
 
 runMain(main);

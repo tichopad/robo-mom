@@ -1,5 +1,6 @@
 import { defineCommand, runMain } from "citty";
 import { logger } from "./logger.ts";
+import { print } from "./print.ts";
 import { queryDocuments } from "./query-documents.ts";
 
 const main = defineCommand({
@@ -27,7 +28,7 @@ const main = defineCommand({
 			default: false,
 		},
 	},
-		async run({ args }) {
+	async run({ args }) {
 		const query = args.query as string;
 		const limit = Number.parseInt(args.limit as string, 10) || 10;
 
@@ -37,7 +38,7 @@ const main = defineCommand({
 		}
 
 		try {
-			logger.info(`Searching for: "${query}"`);
+			print.info(`Searching for: "${query}"`);
 			const start = performance.now();
 
 			const results = await queryDocuments(query);
@@ -45,7 +46,7 @@ const main = defineCommand({
 			const end = performance.now();
 			const executionTime = (end - start).toFixed(2);
 
-			logger.info(`Found ${results.length} results in ${executionTime}ms`);
+			print.info(`Found ${results.length} results in ${executionTime}ms`);
 
 			if (results.length === 0) {
 				console.log("\nNo results found.");
@@ -71,7 +72,9 @@ const main = defineCommand({
 					console.log(`Similarity: ${result.similarity.toFixed(4)}`);
 
 					if (result.frontmatter_attributes) {
-						console.log(`Frontmatter: ${JSON.stringify(result.frontmatter_attributes, null, 2)}`);
+						console.log(
+							`Frontmatter: ${JSON.stringify(result.frontmatter_attributes, null, 2)}`,
+						);
 					}
 				}
 
@@ -97,7 +100,6 @@ const main = defineCommand({
 				console.log(`\n... and ${results.length - limit} more results`);
 				console.log("Use --limit to see more results");
 			}
-
 		} catch (error) {
 			if (error instanceof Error) {
 				logger.error(`Error executing search: ${error.message}`);

@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { loadMarkdownFilesFromGlob } from "../data-loader.ts";
 import { logger } from "../logger.ts";
+import { print } from "../print.ts";
 
 export default defineCommand({
 	meta: {
@@ -23,7 +24,7 @@ export default defineCommand({
 		logger.debug("Received command to load files for a glob: %s", args.glob);
 		await loadMarkdownFilesFromGlob(args.glob);
 		const end = performance.now();
-		logger.info("Loading files done in %d ms", Math.floor(end - start));
+		print.success("Loading files done in %d ms", Math.floor(end - start));
 		return;
 	},
 });

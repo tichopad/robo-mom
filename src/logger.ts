@@ -38,42 +38,6 @@ const orderedJsonFormat = winston.format.printf((info) => {
 	return JSON.stringify(result);
 });
 
-const prettyConsoleFormat = winston.format.printf((info) => {
-	// Map log levels to emojis
-	const levelEmojis: Record<string, string> = {
-		error: "❌",
-		warn: "⚠️",
-		info: "ℹ️",
-		debug: "🐛",
-		verbose: "📝",
-		silly: "🙃"
-	};
-
-	const emoji = levelEmojis[info.level] || "📄";
-	const levelColor = {
-		error: "\x1b[31m", // red
-		warn: "\x1b[33m",  // yellow
-		info: "\x1b[36m",  // cyan
-		debug: "\x1b[35m", // magenta
-		verbose: "\x1b[32m", // green
-		silly: "\x1b[37m"  // white
-	}[info.level] || "\x1b[0m";
-
-	const reset = "\x1b[0m";
-
-	// Format the message with splat support
-	let message = info.message;
-	if (info.splat && Array.isArray(info.splat) && info.splat.length > 0) {
-		// Apply splat formatting
-		const transformed = winston.format.splat().transform(info);
-		if (transformed && typeof transformed === 'object' && 'message' in transformed) {
-			message = transformed.message;
-		}
-	}
-
-	return `${emoji}  ${levelColor}${message}${reset}`;
-});
-
 const defaultLogFileTransport = new winston.transports.File({
 	filename: logFile,
 	level: "debug",
@@ -87,20 +51,11 @@ const defaultLogFileTransport = new winston.transports.File({
 	),
 });
 
-const prettyConsoleTransport = new winston.transports.Console({
-	level: "info",
-	format: winston.format.combine(
-		winston.format.errors({ stack: true }),
-		winston.format.splat(),
-		prettyConsoleFormat
-	),
-});
-
 export const logger = winston.createLogger({
 	level: logLevel,
 	defaultMeta: {
 		service: "robo-mom",
 	},
-	transports: [defaultLogFileTransport, prettyConsoleTransport],
+	transports: [defaultLogFileTransport],
 	exceptionHandlers: [defaultLogFileTransport],
 });

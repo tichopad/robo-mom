@@ -1,16 +1,17 @@
-import { extract as extractFrontmatter } from "@std/front-matter/any";
-import { test as testFrontmatter } from "@std/front-matter/test";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { performance } from "node:perf_hooks";
 import { setTimeout } from "node:timers/promises";
+import { extract as extractFrontmatter } from "@std/front-matter/any";
+import { test as testFrontmatter } from "@std/front-matter/test";
 import { eq } from "drizzle-orm";
 import { chunkMarkdown } from "./chunk-text.ts";
 import { db } from "./db/client.ts";
 import { notesTable } from "./db/schema.ts";
 import { generateEmbedding } from "./embeddings.ts";
 import { logger } from "./logger.ts";
-import { performance } from "node:perf_hooks";
+import { print } from "./print.ts";
 
 export async function loadMarkdownFilesFromGlob(
 	globPath: string | string[],
@@ -55,7 +56,7 @@ export async function loadMarkdownFilesFromGlob(
 		}
 	}
 
-	logger.info(
+	print.success(
 		"Loaded %d Markdown files, skipped %d unchanged files",
 		count,
 		skipped,
@@ -104,7 +105,7 @@ export async function loadMarkdownFileToDb(filePath: string): Promise<boolean> {
 
 	const bodyChunks = chunkMarkdown(body, 12_000);
 
-	logger.info(
+	print.info(
 		"Chunked markdown file: %s (%d chunks)",
 		filePath,
 		bodyChunks.length,
