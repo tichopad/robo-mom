@@ -10,7 +10,8 @@
 		"db:cli": "tsx --env-file=.env ./src/db-cli.ts",
 		"db:studio": "drizzle-kit studio",
 		"cli": "tsx --env-file=.env ./src/cli.ts",
-		"rag:cli": "tsx --env-file=.env ./src/rag-cli.ts"
+		"rag:cli": "tsx --env-file=.env ./src/rag-cli.ts",
+		"ripgrep:cli": "tsx --env-file=.env ./src/dev-tools/ripgrep-cli.ts"
 	},
 	"packageManager": "pnpm@10.12.4",
 	"dependencies": {

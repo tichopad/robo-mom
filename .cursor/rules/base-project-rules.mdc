@@ -13,3 +13,7 @@ alwaysApply: true
 8. Always prefer functional programming patterns
 9. The project is a CLI application using primarily the `citty` package for the base CLI interface
 10. Always assume the env. file is set up correctly.
+11. The project uses the `winston` package for logging.
+12. The project uses the `zod` package for validation.
+13. The project uses `ink` for rendering the terminal UI.
+14. The project is a CLI application which goal is to allow the user to chat with their notes.

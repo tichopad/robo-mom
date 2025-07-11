@@ -1,5 +1,7 @@
+import { promises as fs } from "node:fs";
+import { join, relative, resolve } from "node:path";
 import { anthropic } from "@ai-sdk/anthropic";
-import { google } from '@ai-sdk/google';
+import { google } from "@ai-sdk/google";
 import {
 	type Message as AiMessage,
 	type CoreMessage,
@@ -7,12 +9,9 @@ import {
 	tool,
 } from "ai";
 import { z } from "zod";
-import { promises as fs } from "node:fs";
-import { join, resolve, relative } from "node:path";
-import { rgPath } from "@vscode/ripgrep";
-import { spawn } from "node:child_process";
 import { logger } from "../../logger.ts";
 import { queryDocuments } from "../../query-documents.ts";
+import { executeRipgrepSearch } from "../../ripgrep.ts";
 import { store } from "./store.ts";
 
 // Security: Define the allowed directory for file operations
@@ -127,9 +126,21 @@ const grepFiles = tool({
 		"Returns matching lines with file paths and line numbers. " +
 		"Use maxResults to limit output and avoid rate limits.",
 	parameters: z.object({
-		pattern: z.string().describe("The ripgrep pattern to search for (supports regex)"),
-		flags: z.array(z.string()).optional().describe("Additional ripgrep flags (e.g., ['-i'] for case-insensitive, ['-w'] for word boundaries)"),
-		maxResults: z.number().optional().describe("Maximum number of results to return (default: 50, use lower values to avoid rate limits)"),
+		pattern: z
+			.string()
+			.describe("The ripgrep pattern to search for (supports regex)"),
+		flags: z
+			.array(z.string())
+			.optional()
+			.describe(
+				"Additional ripgrep flags (e.g., ['-i'] for case-insensitive, ['-w'] for word boundaries)",
+			),
+		maxResults: z
+			.number()
+			.optional()
+			.describe(
+				"Maximum number of results to return (default: 50, use lower values to avoid rate limits)",
+			),
 	}),
 	execute: async ({ pattern, flags = [], maxResults = 50 }) => {
 		const logWithRequestId = logger.child({
@@ -142,69 +153,33 @@ const grepFiles = tool({
 			maxResults,
 		});
 
-		return new Promise((resolve, reject) => {
-			const args = [
-				...flags,
-				"--line-number",
-				"--with-filename",
-				"--no-heading",
-				"--color=never",
+		try {
+			const result = await executeRipgrepSearch({
 				pattern,
-				NOTES_DIRECTORY,
-			];
-
-			const rg = spawn(rgPath, args);
-			let output = "";
-			let errorOutput = "";
-
-			rg.stdout.on("data", (data) => {
-				output += data.toString();
+				flags,
+				maxResults,
 			});
 
-			rg.stderr.on("data", (data) => {
-				errorOutput += data.toString();
+			logWithRequestId.debug("Tool grepFiles completed", {
+				toolName: "grepFiles",
+				pattern,
+				flags,
+				maxResults,
+				totalMatchesFound: result.totalMatches,
+				limited: result.limited,
 			});
 
-			rg.on("close", (code) => {
-				logWithRequestId.debug("Tool grepFiles completed", {
-					toolName: "grepFiles",
-					pattern,
-					flags,
-					maxResults,
-					exitCode: code,
-					totalMatchesFound: output.split("\n").filter(line => line.trim()).length,
-				});
-
-				if (code === 0) {
-					const results = output.trim().split("\n").filter(line => line.trim());
-					const limitedResults = results.slice(0, maxResults);
-
-					if (results.length > maxResults) {
-						limitedResults.push(`... and ${results.length - maxResults} more results (limited to ${maxResults})`);
-					}
-
-					resolve(limitedResults.length > 0 ? limitedResults : ["No matches found"]);
-				} else if (code === 1) {
-					// Exit code 1 means no matches found
-					resolve(["No matches found"]);
-				} else {
-					logWithRequestId.error("ripgrep error", {
-						toolName: "grepFiles",
-						errorOutput,
-						exitCode: code,
-					});
-					reject(new Error(`ripgrep failed: ${errorOutput}`));
-				}
+			return result.results;
+		} catch (error) {
+			logWithRequestId.error("Tool grepFiles failed", {
+				toolName: "grepFiles",
+				pattern,
+				flags,
+				maxResults,
+				error: error instanceof Error ? error.message : "Unknown error",
 			});
-
-			rg.on("error", (error) => {
-				logWithRequestId.error("ripgrep spawn error", {
-					toolName: "grepFiles",
-					error: error.message,
-				});
-				reject(error);
-			});
-		});
+			throw error;
+		}
 	},
 });
 
@@ -217,7 +192,11 @@ const readFile = tool({
 		"Read the contents of a specific file in the notes directory. " +
 		"Use this to get the full content of a file after finding it with grepFiles or searchNotes.",
 	parameters: z.object({
-		filePath: z.string().describe("The path to the file to read (relative to the notes directory)"),
+		filePath: z
+			.string()
+			.describe(
+				"The path to the file to read (relative to the notes directory)",
+			),
 	}),
 	execute: async ({ filePath }) => {
 		const logWithRequestId = logger.child({
@@ -249,7 +228,8 @@ const readFile = tool({
 				size: content.length,
 			};
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "Unknown error";
+			const errorMessage =
+				error instanceof Error ? error.message : "Unknown error";
 			logWithRequestId.error("Tool readFile failed", {
 				toolName: "readFile",
 				filePath,
