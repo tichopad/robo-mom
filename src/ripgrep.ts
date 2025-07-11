@@ -14,9 +14,9 @@
  * @version 1.0.0
  */
 
-import { rgPath } from "@vscode/ripgrep";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
+import { rgPath } from "@vscode/ripgrep";
 import { logger } from "./logger.ts";
 
 /**
@@ -91,7 +91,9 @@ export interface RipgrepResult {
  * @throws {Error} When ripgrep process fails to start or encounters an error
  * @throws {Error} When the search pattern is invalid or causes ripgrep to fail
  */
-export async function executeRipgrepSearch(options: RipgrepOptions): Promise<RipgrepResult> {
+export async function executeRipgrepSearch(
+	options: RipgrepOptions,
+): Promise<RipgrepResult> {
 	const { pattern, flags = [], maxResults = 50 } = options;
 
 	/**
@@ -144,21 +146,29 @@ export async function executeRipgrepSearch(options: RipgrepOptions): Promise<Rip
 		 * - Other: Error occurred
 		 */
 		rg.on("close", (code) => {
-			const totalMatches = output.split("\n").filter(line => line.trim()).length;
+			const totalMatches = output
+				.split("\n")
+				.filter((line) => line.trim()).length;
 
 			if (code === 0) {
 				// Success with matches found
-				const results = output.trim().split("\n").filter(line => line.trim());
+				const results = output
+					.trim()
+					.split("\n")
+					.filter((line) => line.trim());
 				const limitedResults = results.slice(0, maxResults);
 				const limited = results.length > maxResults;
 
 				// Add indication if results were limited
 				if (limited) {
-					limitedResults.push(`... and ${results.length - maxResults} more results (limited to ${maxResults})`);
+					limitedResults.push(
+						`... and ${results.length - maxResults} more results (limited to ${maxResults})`,
+					);
 				}
 
 				resolve({
-					results: limitedResults.length > 0 ? limitedResults : ["No matches found"],
+					results:
+						limitedResults.length > 0 ? limitedResults : ["No matches found"],
 					totalMatches,
 					limited,
 				});

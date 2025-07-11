@@ -80,7 +80,8 @@ const main = defineCommand({
 		 */
 		flags: {
 			type: "string",
-			description: "Additional ripgrep flags (comma-separated, e.g., '-i,-w' for case-insensitive and word boundaries)",
+			description:
+				"Additional ripgrep flags (comma-separated, e.g., '-i,-w' for case-insensitive and word boundaries)",
 			alias: "f",
 			default: "",
 		},
@@ -108,7 +109,8 @@ const main = defineCommand({
 		 */
 		verbose: {
 			type: "boolean",
-			description: "Show detailed information including execution time and match counts",
+			description:
+				"Show detailed information including execution time and match counts",
 			alias: "v",
 			default: false,
 		},
@@ -180,7 +182,11 @@ const main = defineCommand({
 			 * Check for both empty results array and the special "No matches found"
 			 * message that ripgrep returns when no matches are found.
 			 */
-			if (result.results.length === 0 || (result.results.length === 1 && result.results[0] === "No matches found")) {
+			if (
+				result.results.length === 0 ||
+				(result.results.length === 1 &&
+					result.results[0] === "No matches found")
+			) {
 				console.log("\nNo matches found.");
 				return;
 			}
@@ -222,8 +228,13 @@ const main = defineCommand({
 			 * If results were limited but the "more results" message wasn't
 			 * included in the results array, we add it manually.
 			 */
-			if (result.limited && !result.results.some(r => r.startsWith("... and "))) {
-				console.log(`\n... and ${result.totalMatches - result.results.length} more results`);
+			if (
+				result.limited &&
+				!result.results.some((r) => r.startsWith("... and "))
+			) {
+				console.log(
+					`\n... and ${result.totalMatches - result.results.length} more results`,
+				);
 				console.log("Use --limit to see more results");
 			}
 		} catch (error) {
