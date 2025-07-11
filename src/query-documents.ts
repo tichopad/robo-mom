@@ -10,7 +10,7 @@ import { generateEmbedding } from "./embeddings.ts";
  * @param query - The query to search for.
  * @returns A list of notes that match the query.
  */
-export async function queryDocuments(query: string) {
+export async function queryDocuments(query: string, limit = 10) {
 	if (query.trim() === "") {
 		throw new Error("Query is required");
 	}
@@ -33,7 +33,7 @@ export async function queryDocuments(query: string) {
 		.from(notesTable)
 		.where(gt(filenameSimilarity, 0.4))
 		.orderBy((result) => desc(result.similarity))
-		.limit(10);
+		.limit(limit);
 
 	const contentSimilarity = sql<number>`1 - (${cosineDistance(
 		notesTable.text_vector,
@@ -51,7 +51,7 @@ export async function queryDocuments(query: string) {
 		.from(notesTable)
 		.where(gt(contentSimilarity, 0.3))
 		.orderBy((result) => desc(result.similarity))
-		.limit(15);
+		.limit(limit);
 
 	const allResults = [...filenameResults, ...contentResults];
 

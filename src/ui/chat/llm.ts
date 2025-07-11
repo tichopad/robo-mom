@@ -1,4 +1,5 @@
-import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { google } from '@ai-sdk/google';
 import {
 	type Message as AiMessage,
 	type CoreMessage,
@@ -6,9 +7,30 @@ import {
 	tool,
 } from "ai";
 import { z } from "zod";
+import { promises as fs } from "node:fs";
+import { join, resolve, relative } from "node:path";
+import { rgPath } from "@vscode/ripgrep";
+import { spawn } from "node:child_process";
 import { logger } from "../../logger.ts";
 import { queryDocuments } from "../../query-documents.ts";
 import { store } from "./store.ts";
+
+// Security: Define the allowed directory for file operations
+const NOTES_DIRECTORY = resolve("example_notes");
+
+/**
+ * Validate that a file path is within the allowed notes directory
+ */
+function validateNotesPath(filePath: string): string {
+	const resolvedPath = resolve(filePath);
+	const relativePath = relative(NOTES_DIRECTORY, resolvedPath);
+
+	if (relativePath.startsWith("..") || resolve(relativePath) === relativePath) {
+		throw new Error("Access denied: Path is outside the notes directory");
+	}
+
+	return resolvedPath;
+}
 
 /**
  * Basic information about the user making the query (author of the notes).
@@ -27,7 +49,7 @@ const aboutAuthor = tool({
 		const logWithRequestId = logger.child({
 			requestId: store.currentRequestId,
 		});
-		logWithRequestId.debug("Tool aboutAuthor initiated", {
+		logWithRequestId.info("Tool aboutAuthor initiated", {
 			toolName: "aboutAuthor",
 			requestedName: name,
 		});
@@ -62,13 +84,13 @@ const searchNotes = tool({
 		const logWithRequestId = logger.child({
 			requestId: store.currentRequestId,
 		});
-		logWithRequestId.debug("Tool searchNotes initiated", {
+		logWithRequestId.info("Tool searchNotes initiated", {
 			toolName: "searchNotes",
 			query,
 		});
 
 		store.debugInfo = `Searching notes for query: ${query}`;
-		const documents = await queryDocuments(query);
+		const documents = await queryDocuments(query, 5);
 		store.debugInfo = `Found ${documents.length} documents`;
 
 		const sortedDocuments = documents.toSorted(
@@ -95,6 +117,157 @@ const searchNotes = tool({
 });
 
 /**
+ * Search files in the notes directory using ripgrep patterns.
+ * @returns Search results with file paths and matching lines.
+ */
+const grepFiles = tool({
+	description:
+		"Search files in the notes directory using ripgrep patterns. " +
+		"Use this for powerful text search capabilities with regex support. " +
+		"Returns matching lines with file paths and line numbers. " +
+		"Use maxResults to limit output and avoid rate limits.",
+	parameters: z.object({
+		pattern: z.string().describe("The ripgrep pattern to search for (supports regex)"),
+		flags: z.array(z.string()).optional().describe("Additional ripgrep flags (e.g., ['-i'] for case-insensitive, ['-w'] for word boundaries)"),
+		maxResults: z.number().optional().describe("Maximum number of results to return (default: 50, use lower values to avoid rate limits)"),
+	}),
+	execute: async ({ pattern, flags = [], maxResults = 50 }) => {
+		const logWithRequestId = logger.child({
+			requestId: store.currentRequestId,
+		});
+		logWithRequestId.info("Tool grepFiles initiated", {
+			toolName: "grepFiles",
+			pattern,
+			flags,
+			maxResults,
+		});
+
+		return new Promise((resolve, reject) => {
+			const args = [
+				...flags,
+				"--line-number",
+				"--with-filename",
+				"--no-heading",
+				"--color=never",
+				pattern,
+				NOTES_DIRECTORY,
+			];
+
+			const rg = spawn(rgPath, args);
+			let output = "";
+			let errorOutput = "";
+
+			rg.stdout.on("data", (data) => {
+				output += data.toString();
+			});
+
+			rg.stderr.on("data", (data) => {
+				errorOutput += data.toString();
+			});
+
+			rg.on("close", (code) => {
+				logWithRequestId.debug("Tool grepFiles completed", {
+					toolName: "grepFiles",
+					pattern,
+					flags,
+					maxResults,
+					exitCode: code,
+					totalMatchesFound: output.split("\n").filter(line => line.trim()).length,
+				});
+
+				if (code === 0) {
+					const results = output.trim().split("\n").filter(line => line.trim());
+					const limitedResults = results.slice(0, maxResults);
+
+					if (results.length > maxResults) {
+						limitedResults.push(`... and ${results.length - maxResults} more results (limited to ${maxResults})`);
+					}
+
+					resolve(limitedResults.length > 0 ? limitedResults : ["No matches found"]);
+				} else if (code === 1) {
+					// Exit code 1 means no matches found
+					resolve(["No matches found"]);
+				} else {
+					logWithRequestId.error("ripgrep error", {
+						toolName: "grepFiles",
+						errorOutput,
+						exitCode: code,
+					});
+					reject(new Error(`ripgrep failed: ${errorOutput}`));
+				}
+			});
+
+			rg.on("error", (error) => {
+				logWithRequestId.error("ripgrep spawn error", {
+					toolName: "grepFiles",
+					error: error.message,
+				});
+				reject(error);
+			});
+		});
+	},
+});
+
+/**
+ * Read the contents of a specific file in the notes directory.
+ * @returns The file contents as a string.
+ */
+const readFile = tool({
+	description:
+		"Read the contents of a specific file in the notes directory. " +
+		"Use this to get the full content of a file after finding it with grepFiles or searchNotes.",
+	parameters: z.object({
+		filePath: z.string().describe("The path to the file to read (relative to the notes directory)"),
+	}),
+	execute: async ({ filePath }) => {
+		const logWithRequestId = logger.child({
+			requestId: store.currentRequestId,
+		});
+		logWithRequestId.info("Tool readFile initiated", {
+			toolName: "readFile",
+			filePath,
+		});
+
+		try {
+			// Resolve the path relative to the notes directory
+			const fullPath = join(NOTES_DIRECTORY, filePath);
+
+			// Validate the path is within the notes directory
+			validateNotesPath(fullPath);
+
+			const content = await fs.readFile(fullPath, "utf-8");
+
+			logWithRequestId.debug("Tool readFile completed", {
+				toolName: "readFile",
+				filePath,
+				contentLength: content.length,
+			});
+
+			return {
+				filePath,
+				content,
+				size: content.length,
+			};
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : "Unknown error";
+			logWithRequestId.error("Tool readFile failed", {
+				toolName: "readFile",
+				filePath,
+				error: errorMessage,
+			});
+
+			if (errorMessage.includes("ENOENT")) {
+				return { error: `File not found: ${filePath}` };
+			}
+			if (errorMessage.includes("Access denied")) {
+				return { error: `Access denied: ${filePath}` };
+			}
+			return { error: `Failed to read file: ${errorMessage}` };
+		}
+	},
+});
+
+/**
  * Send a request to the LLM.
  * @param messages - The messages to send to the LLM.
  * @returns A stream of text from the LLM.
@@ -108,13 +281,13 @@ export function sendRequestToLLM(
 	logWithRequestId.debug("LLM request initiated", {
 		conversationLength: messages.length,
 		messages,
-		model: "gpt-4o",
-		maxSteps: 5,
-		availableTools: ["aboutAuthor", "searchNotes"],
+		model: "gemini-2.5-flash",
+		maxSteps: 10,
+		availableTools: ["aboutAuthor", "searchNotes", "grepFiles", "readFile"],
 	});
 
 	return streamText({
-		model: openai("gpt-4o"),
+		model: google("gemini-2.5-flash"),
 		messages,
 		onStepFinish: (stepResult) => {
 			// Log each step with structured data
@@ -126,20 +299,9 @@ export function sendRequestToLLM(
 				toolCallsCount: stepResult.toolCalls?.length || 0,
 			});
 
-			// Log each tool call individually with structured data
-			for (const toolResult of stepResult.toolResults) {
-				logWithRequestId.debug("Tool execution completed", {
-					toolName: toolResult.toolName,
-					toolArgs: toolResult.args,
-					toolResultType: toolResult.type,
-					toolResult: toolResult.result,
-					executionSuccess: toolResult.type === "tool-result",
-				});
-			}
-
 			// Log tool calls (if any) for this step
 			if (stepResult.toolCalls && stepResult.toolCalls.length > 0) {
-				logWithRequestId.debug("Tool calls in step", {
+				logWithRequestId.info("Tool calls initiated", {
 					toolCalls: stepResult.toolCalls.map((call) => ({
 						toolName: call.toolName,
 						args: call.args,
@@ -147,20 +309,40 @@ export function sendRequestToLLM(
 					})),
 				});
 			}
+
+			// Log each tool call individually with structured data
+			for (const toolResult of stepResult.toolResults) {
+				logWithRequestId.info("Tool execution completed", {
+					toolName: toolResult.toolName,
+					toolArgs: toolResult.args,
+					toolResultType: toolResult.type,
+					toolResult: toolResult.result,
+					executionSuccess: toolResult.type === "tool-result",
+				});
+			}
 		},
 		system:
 			// biome-ignore lint/style/useTemplate: It's more readable this way without having to use dedent
-			"You are a helpful assistant that can search for notes and answer questions about them." +
+			"You are a helpful assistant that can search for notes using searchNotes, grepFiles, and readFile tools and answer questions about them." +
 			"Assume that the user is the author of the notes you have access to unless the note explicitly says otherwise." +
 			`Today's date is ${new Date().toLocaleDateString()}.` +
 			"Follow these rules:\n" +
-			"1. If you used the searchNotes tool for a query, always link the sources in the response.\n" +
-			"2. Aim for readability and clarity. Avoid overly verbose responses.\n" +
-			"3. If you are not sure about the answer, say so.",
+			"1. ALWAYS use the aboutAuthor tool FIRST when the user asks about themselves, their family, personal details, or uses words like 'my', 'me', 'I', 'family', 'personal', etc.\n" +
+			"2. ALWAYS use multiple tools to get comprehensive results. Start with searchNotes for semantic search, then use grepFiles for exact pattern matching.\n" +
+			"3. searchNotes finds semantically relevant content but may miss specific terms. grepFiles finds exact text matches with regex support.\n" +
+			"4. Combine results from both tools for the most complete answer. Use readFile to get full context when needed.\n" +
+			"5. If you used the searchNotes, grepFiles, or readFile tools for a query, always link the sources in the response.\n" +
+			"6. Aim for readability and clarity. Avoid overly verbose responses.\n" +
+			"7. If you are not sure about the answer, say so.\n" +
+			"8. Use grepFiles with regex patterns and flags like '-i' for case-insensitive search, '-w' for word boundaries.\n" +
+			"9. For best results, use searchNotes first, then grepFiles with relevant keywords from the searchNotes results.\n" +
+			"10. When the user asks about themselves, combine aboutAuthor results with searchNotes/grepFiles to provide comprehensive personal information.",
 		tools: {
 			aboutAuthor,
 			searchNotes,
+			grepFiles,
+			readFile,
 		},
-		maxSteps: 5,
+		maxSteps: 10,
 	});
 }
