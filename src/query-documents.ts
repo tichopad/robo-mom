@@ -31,8 +31,7 @@ export async function queryDocuments(query: string, limit = 10) {
 			similarity: filenameSimilarity,
 		})
 		.from(notesTable)
-		.where(gt(filenameSimilarity, 0.4))
-		.orderBy((result) => desc(result.similarity))
+		.where(gt(filenameSimilarity, 0.6))
 		.limit(limit);
 
 	const contentSimilarity = sql<number>`1 - (${cosineDistance(
@@ -49,13 +48,14 @@ export async function queryDocuments(query: string, limit = 10) {
 			similarity: contentSimilarity,
 		})
 		.from(notesTable)
-		.where(gt(contentSimilarity, 0.3))
-		.orderBy((result) => desc(result.similarity))
+		.where(gt(contentSimilarity, 0.5))
 		.limit(limit);
 
 	const allResults = [...filenameResults, ...contentResults];
 
-	const uniqueResults = distinctBy(allResults, (x) => x.id);
+	const uniqueResults = distinctBy(allResults, (x) => x.id).sort(
+		(a, b) => b.similarity - a.similarity,
+	);
 
 	return uniqueResults;
 }

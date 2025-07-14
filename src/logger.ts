@@ -59,3 +59,10 @@ export const logger = winston.createLogger({
 	transports: [defaultLogFileTransport],
 	exceptionHandlers: [defaultLogFileTransport],
 });
+
+// Test that logging works
+logger.info('Logger initialized', {
+	logLevel,
+	logFile,
+	timestamp: new Date().toISOString()
+});

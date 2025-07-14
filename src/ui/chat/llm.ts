@@ -89,21 +89,17 @@ const searchNotes = tool({
 		});
 
 		store.debugInfo = `Searching notes for query: ${query}`;
-		const documents = await queryDocuments(query, 5);
+		const documents = await queryDocuments(query);
 		store.debugInfo = `Found ${documents.length} documents`;
-
-		const sortedDocuments = documents.toSorted(
-			(a, b) => b.similarity - a.similarity,
-		);
 
 		logWithRequestId.debug("Tool searchNotes completed", {
 			toolName: "searchNotes",
 			query,
 			documentsFound: documents.length,
-			sortedDocuments,
+			documents,
 		});
 
-		return sortedDocuments.map(
+		return documents.map(
 			(doc, i) => `
 				<file-${i}>
 					<path>${doc.filename}</path>
