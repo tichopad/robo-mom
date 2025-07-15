@@ -1,6 +1,3 @@
-import { promises as fs } from "node:fs";
-import { join, relative, resolve } from "node:path";
-import { anthropic } from "@ai-sdk/anthropic";
 import { google } from "@ai-sdk/google";
 import {
 	type Message as AiMessage,
@@ -8,7 +5,12 @@ import {
 	streamText,
 	tool,
 } from "ai";
+import { sql } from "drizzle-orm";
+import { promises as fs } from "node:fs";
+import { join, relative, resolve } from "node:path";
 import { z } from "zod";
+import { db } from "../../db/client.ts";
+import { notesTable } from "../../db/schema.ts";
 import { logger } from "../../logger.ts";
 import { queryDocuments } from "../../query-documents.ts";
 import { executeRipgrepSearch } from "../../ripgrep.ts";
@@ -34,6 +36,7 @@ function validateNotesPath(filePath: string): string {
 /**
  * Basic information about the user making the query (author of the notes).
  * More detailed information can be found by searching the notes using the searchNotes tool.
+ * Searches for notes with the "about-me" tag in the frontmatter attributes.
  * @returns Basic information about the user making the query (author of the notes).
  */
 const aboutAuthor = tool({
@@ -41,30 +44,51 @@ const aboutAuthor = tool({
 		"Basic information about the user making the query (author of the notes)." +
 		"More detailed information can be found by searching the notes using the searchNotes tool.",
 	parameters: z.object({
-		name: z.string().describe("Name of the user."),
+		limit: z
+			.number()
+			.optional()
+			.describe("The maximum number of notes describing the author to return."),
 	}),
-	// TODO: Implement this (search notes looking for chunks with a corresponding frontmatter attribute, e.g. "tags: [about-me]")
-	execute: async ({ name }) => {
+	execute: async ({ limit = 10 }) => {
 		const logWithRequestId = logger.child({
 			requestId: store.currentRequestId,
 		});
 		logWithRequestId.info("Tool aboutAuthor initiated", {
 			toolName: "aboutAuthor",
-			requestedName: name,
+			requestedLimit: limit,
 		});
 
-		const result = {
-			name,
-			info: "The notes author is 33 year old developer from Ostrava, Czechia. His name is Michael.",
-		};
+		// Search for notes with the "about-me" tag in the frontmatter attributes.
+		const result = await db.query.notesTable.findMany({
+			where: sql`
+				${notesTable.frontmatter_attributes} IS NOT NULL
+				AND ${notesTable.frontmatter_attributes}->'tags' IS NOT NULL
+				AND (${notesTable.frontmatter_attributes}->'tags')::jsonb @> '["about-me"]'`,
+			limit,
+			columns: {
+				id: true,
+				filename: true,
+				chunk_index: true,
+				frontmatter_attributes: true,
+				text: true,
+			},
+		});
 
 		logWithRequestId.debug("Tool aboutAuthor completed", {
 			toolName: "aboutAuthor",
-			requestedName: name,
+			requestedLimit: limit,
 			returnedInfo: result,
 		});
 
-		return result;
+		return result.map(
+			(doc, i) => `
+				<file-${i}>
+					<path>${doc.filename}</path>
+					<content>${doc.text}</content>
+					<meta>${JSON.stringify(doc.frontmatter_attributes)}</meta>
+				</file-${i}>
+			`,
+		);
 	},
 });
 
@@ -89,7 +113,7 @@ const searchNotes = tool({
 		});
 
 		store.debugInfo = `Searching notes for query: ${query}`;
-		const documents = await queryDocuments(query);
+		const documents = await queryDocuments(query, 8);
 		store.debugInfo = `Found ${documents.length} documents`;
 
 		logWithRequestId.debug("Tool searchNotes completed", {
@@ -135,10 +159,10 @@ const grepFiles = tool({
 			.number()
 			.optional()
 			.describe(
-				"Maximum number of results to return (default: 50, use lower values to avoid rate limits)",
+				"Maximum number of results to return (default: 10, use lower values to avoid rate limits)",
 			),
 	}),
-	execute: async ({ pattern, flags = [], maxResults = 50 }) => {
+	execute: async ({ pattern, flags = [], maxResults = 10 }) => {
 		const logWithRequestId = logger.child({
 			requestId: store.currentRequestId,
 		});
@@ -265,6 +289,19 @@ export function sendRequestToLLM(
 	return streamText({
 		model: google("gemini-2.5-flash"),
 		messages,
+		onError: (error) => {
+			logWithRequestId.error("LLM request failed", {
+				error,
+			});
+			store.error =
+				error.error instanceof Error ? error.error.message : "Unknown error";
+		},
+		onFinish: (result) => {
+			logWithRequestId.info("LLM request finished", {
+				result,
+			});
+			store.debugInfo = "LLM request finished.";
+		},
 		onStepFinish: (stepResult) => {
 			// Log each step with structured data
 			logWithRequestId.debug("LLM step completed", {
@@ -303,7 +340,7 @@ export function sendRequestToLLM(
 			"Assume that the user is the author of the notes you have access to unless the note explicitly says otherwise." +
 			`Today's date is ${new Date().toLocaleDateString()}.` +
 			"Follow these rules:\n" +
-			"1. ALWAYS use the aboutAuthor tool FIRST when the user asks about themselves, their family, personal details, or uses words like 'my', 'me', 'I', 'family', 'personal', etc.\n" +
+			"1. ALWAYS use the aboutAuthor tool FIRST when the user asks about themselves, their family, personal details, or uses words like 'my', 'me', 'I', 'family', 'personal', etc. Use the limit parameter to return more or less information.\n" +
 			"2. ALWAYS use multiple tools to get comprehensive results. Start with searchNotes for semantic search, then use grepFiles for exact pattern matching.\n" +
 			"3. searchNotes finds semantically relevant content but may miss specific terms. grepFiles finds exact text matches with regex support.\n" +
 			"4. Combine results from both tools for the most complete answer. Use readFile to get full context when needed.\n" +
@@ -312,7 +349,8 @@ export function sendRequestToLLM(
 			"7. If you are not sure about the answer, say so.\n" +
 			"8. Use grepFiles with regex patterns and flags like '-i' for case-insensitive search, '-w' for word boundaries.\n" +
 			"9. For best results, use searchNotes first, then grepFiles with relevant keywords from the searchNotes results.\n" +
-			"10. When the user asks about themselves, combine aboutAuthor results with searchNotes/grepFiles to provide comprehensive personal information.",
+			"10. When the user asks about themselves, combine aboutAuthor results with searchNotes/grepFiles to provide comprehensive personal information.\n" +
+			"11. ALWAYS phrase searchNotes queries as questions. For example, instead of searching for 'meeting notes', search for 'What are the meeting notes about?' or 'What meetings have I documented?'",
 		tools: {
 			aboutAuthor,
 			searchNotes,
