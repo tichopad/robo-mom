@@ -6,6 +6,7 @@
 		"check": "pnpm run check:biome && pnpm run check:ts",
 		"check:biome": "biome check --fix .",
 		"check:ts": "tsc",
+		"test": "node --test",
 		"db:migrate": "drizzle-kit generate && tsx --env-file=.env ./src/db/migrate.ts",
 		"db:cli": "tsx --env-file=.env ./src/dev-tools/db-cli.ts",
 		"db:studio": "drizzle-kit studio",

@@ -1,0 +1,16 @@
+---
+description: Base rules for testing
+globs: "**/*.test.ts"
+alwaysApply: true
+---
+- Test files are placed next to the source files they test with `.test.ts` extension
+- Use Node.js built-in test runner (node:test) for all tests
+- Test both positive and negative cases (with and without context)
+- Use descriptive test names that explain the scenario being tested
+- Group related tests using `describe()` blocks for better organization
+- Test error conditions and edge cases, not just happy paths
+- Test concurrent scenarios to ensure proper isolation
+- Use `t.plan()` when testing async operations to ensure all assertions run
+- Prefer `t.assert` over direct `assert` calls for better test runner integration
+- Test both synchronous and asynchronous scenarios
+- Verify cleanup and isolation after exceptions or errors
