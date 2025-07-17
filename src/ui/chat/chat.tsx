@@ -13,8 +13,12 @@ import {
 	useChatStore,
 } from "./store.ts";
 
+// Whether to show the debug box
 const DEBUG = true;
 
+/**
+ * The main chat component.
+ */
 export default function Chat() {
 	const store = useChatStore();
 	const app = useApp();

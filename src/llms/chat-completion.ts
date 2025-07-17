@@ -17,7 +17,8 @@ function systemPrompt(tools: Record<string, Tool>) {
 		// biome-ignore lint/style/useTemplate: It's more readable this way without having to use dedent
 		`You are a helpful assistant that can search for notes using ${Object.keys(tools).join(", ")} tools and answer questions about them.` +
 		"Assume that the user is the author of the notes you have access to unless the note explicitly says otherwise." +
-		`Today's date is ${new Date().toLocaleDateString()}.` +
+		`Current date and time is ${new Date().toISOString()}.` +
+		`The user's timezone is ${Intl.DateTimeFormat().resolvedOptions().timeZone}.` +
 		"Follow these rules:\n" +
 		"1. ALWAYS use the aboutAuthor tool FIRST when the user asks about themselves, their family, personal details, or uses words like 'my', 'me', 'I', 'family', 'personal', etc." +
 		"Use the limit parameter to return more or less information.\n" +
@@ -34,11 +35,20 @@ function systemPrompt(tools: Record<string, Tool>) {
 	);
 }
 
+/**
+ * Parameters for the streaming chat completion instance.
+ */
 type StreamingChatCompletionParams = {
 	onDebugInfo: (message: string) => void;
 	onError: (error: Error) => void;
 };
 
+/**
+ * Create a streaming chat completion instance.
+ * @param onDebugInfo - A function to call when debug info is available.
+ * @param onError - A function to call when an error occurs.
+ * @returns A function to send a request to the LLM.
+ */
 export function createStreamingChatCompletion({
 	onDebugInfo,
 	onError,
@@ -69,7 +79,7 @@ export function createStreamingChatCompletion({
 		});
 
 		return streamText({
-			model: google("gemini-2.5-flash"),
+			model,
 			messages,
 			system: systemPrompt(tools),
 			tools,
