@@ -30,3 +30,4 @@ alwaysApply: true
 12. The project uses the `zod` package for validation.
 13. The project uses `ink` for rendering the terminal UI.
 14. The project is a CLI application which goal is to allow the user to chat with their notes.
+15. Use the `#src` prefix for all internal files imports EXCEPT when importing from a neighboring file.

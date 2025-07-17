@@ -14,6 +14,9 @@
 		"ripgrep:cli": "tsx --env-file=.env ./src/dev-tools/ripgrep-cli.ts"
 	},
 	"packageManager": "pnpm@10.12.4",
+	"imports": {
+		"#src/*": "./src/*"
+	},
 	"dependencies": {
 		"@ai-sdk/anthropic": "1.2.12",
 		"@ai-sdk/google": "1.2.21",

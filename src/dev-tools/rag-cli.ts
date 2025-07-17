@@ -1,7 +1,7 @@
 import { defineCommand, runMain } from "citty";
-import { logger } from "../logger.ts";
-import { print } from "../print.ts";
-import { queryDocuments } from "../query-documents.ts";
+import { logger } from "#src/logger.ts";
+import { print } from "#src/print.ts";
+import { queryDocuments } from "#src/query-notes/query-documents.ts";
 
 const main = defineCommand({
 	meta: {

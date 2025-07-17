@@ -1,8 +1,8 @@
 import { distinctBy } from "@std/collections";
-import { cosineDistance, desc, gt, sql } from "drizzle-orm";
-import { db } from "./db/client.ts";
-import { notesTable } from "./db/schema.ts";
-import { generateEmbedding } from "./embeddings.ts";
+import { cosineDistance, gt, sql } from "drizzle-orm";
+import { db } from "#src/db/client.ts";
+import { notesTable } from "#src/db/schema.ts";
+import { generateEmbedding } from "#src/llms/embeddings.ts";
 
 /**
  * Performs a semantic search on a database of loaded notes.

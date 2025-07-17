@@ -6,12 +6,12 @@ import { setTimeout } from "node:timers/promises";
 import { extract as extractFrontmatter } from "@std/front-matter/any";
 import { test as testFrontmatter } from "@std/front-matter/test";
 import { eq } from "drizzle-orm";
-import { chunkMarkdown } from "./chunk-text.ts";
-import { db } from "./db/client.ts";
-import { notesTable } from "./db/schema.ts";
-import { generateEmbedding } from "./embeddings.ts";
-import { logger } from "./logger.ts";
-import { print } from "./print.ts";
+import { chunkMarkdown } from "#src/chunk-text.ts";
+import { db } from "#src/db/client.ts";
+import { notesTable } from "#src/db/schema.ts";
+import { generateEmbedding } from "#src/llms/embeddings.ts";
+import { logger } from "#src/logger.ts";
+import { print } from "#src/print.ts";
 
 export async function loadMarkdownFilesFromGlob(
 	globPath: string | string[],

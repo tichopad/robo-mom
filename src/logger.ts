@@ -61,8 +61,8 @@ export const logger = winston.createLogger({
 });
 
 // Test that logging works
-logger.info('Logger initialized', {
+logger.info("Logger initialized", {
 	logLevel,
 	logFile,
-	timestamp: new Date().toISOString()
+	timestamp: new Date().toISOString(),
 });

@@ -32,9 +32,9 @@
  */
 
 import { defineCommand, runMain } from "citty";
-import { logger } from "../logger.ts";
-import { print } from "../print.ts";
-import { executeRipgrepSearch } from "../ripgrep.ts";
+import { logger } from "#src/logger.ts";
+import { print } from "#src/print.ts";
+import { executeRipgrepSearch } from "#src/query-notes/ripgrep.ts";
 
 /**
  * Main CLI command definition for ripgrep testing

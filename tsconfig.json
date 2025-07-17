@@ -1,7 +1,8 @@
 {
 	"compilerOptions": {
 		"target": "ESNext",
-		"module": "Preserve",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
 		"allowImportingTsExtensions": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,

@@ -1,6 +1,5 @@
-import { Box, Text, Transform } from "ink";
+import { Box, Text } from "ink";
 import { useEffect, useState } from "react";
-import BlinkingCursor from "./blinking-cursor";
 
 type Props = {
 	input: string;

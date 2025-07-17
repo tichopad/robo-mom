@@ -1,19 +1,25 @@
 import { proxy, useSnapshot } from "valtio";
-import { logger } from "../../logger.ts";
-import type { Message } from "../types.ts";
-import { createRandomString } from "../utils.ts";
-import { sendRequestToLLM } from "./llm.ts";
+import { createStreamingChatCompletion } from "#src/llms/chat-completion.ts";
+import { logger } from "#src/logger.ts";
+import type { Message } from "#src/ui/types.ts";
+import { createRandomString } from "#src/utils.ts";
 
 type Store = {
+	/** The messages in the chat. */
 	messages: Message[];
+	/** The current user input. */
 	input: string;
+	/** Whether the chat is loading. */
 	isLoading: boolean;
+	/** The error message. */
 	error: string | null;
+	/** The debug info. */
 	debugInfo: string | null;
+	/** The streaming response. */
 	streamingResponse: string;
-	currentRequestId: string | null;
 };
 
+/** Reactive chat store. */
 export const store = proxy<Store>({
 	messages: [],
 	input: "",
@@ -21,12 +27,22 @@ export const store = proxy<Store>({
 	error: null,
 	debugInfo: null,
 	streamingResponse: "",
-	currentRequestId: null,
 });
 
+/** Hook to get the reactive chat store. */
 export function useChatStore() {
 	return useSnapshot(store);
 }
+
+// Chat completion instance
+const sendRequestToLLM = createStreamingChatCompletion({
+	onDebugInfo: (info: string) => {
+		store.debugInfo = info;
+	},
+	onError: (error: Error) => {
+		store.error = error.message;
+	},
+});
 
 /**
  * Send the current user input to the LLM and pipes the streaming response to the store.
@@ -34,21 +50,16 @@ export function useChatStore() {
 export async function sendUserInputToLLM(): Promise<void> {
 	// Generate a request ID for this conversation turn
 	const userMessageId = createRandomString();
-	const requestId = createRandomString();
-	store.currentRequestId = requestId;
-	const logWithRequestId = logger.child({ requestId });
 
 	const input = store.input.trim();
 	if (input === "") {
 		store.error = "Input is empty, skipping request.";
-		logWithRequestId.error("Input is empty, skipping request.");
+		logger.error("Input is empty, skipping request.");
 		return;
 	}
 	if (!process.env.OPENAI_API_KEY) {
 		store.error = "OPENAI_API_KEY not found. Please add it to your .env file.";
-		logWithRequestId.error(
-			"OPENAI_API_KEY not found. Please add it to your .env file.",
-		);
+		logger.error("OPENAI_API_KEY not found. Please add it to your .env file.");
 		return;
 	}
 
@@ -77,7 +88,7 @@ export async function sendUserInputToLLM(): Promise<void> {
 		const { textStream } = sendRequestToLLM(messages);
 
 		store.debugInfo = "Stream started, receiving tokens...";
-		logWithRequestId.debug("Stream started, receiving tokens...");
+		logger.debug("Stream started, receiving tokens...");
 
 		// Stream the response in
 		let chunkCount = 0;
@@ -95,7 +106,7 @@ export async function sendUserInputToLLM(): Promise<void> {
 
 		// Log the final response with structured data
 		const assistantMessageId = createRandomString();
-		logWithRequestId.debug("LLM response completed", {
+		logger.debug("LLM response completed", {
 			assistantMessageId,
 			responseLength: store.streamingResponse.length,
 			totalChunks: chunkCount,
@@ -104,7 +115,7 @@ export async function sendUserInputToLLM(): Promise<void> {
 		});
 
 		// Log the full response content for debugging
-		logWithRequestId.debug("LLM response content", {
+		logger.debug("LLM response content", {
 			assistantMessageId,
 			content: store.streamingResponse.trim(),
 		});
@@ -112,7 +123,7 @@ export async function sendUserInputToLLM(): Promise<void> {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 
 		// Log the error with structured data
-		logWithRequestId.error("LLM request failed", {
+		logger.error("LLM request failed", {
 			error: errorMessage,
 			errorType: error instanceof Error ? error.constructor.name : "Unknown",
 			userInput: input,
@@ -130,7 +141,7 @@ export async function sendUserInputToLLM(): Promise<void> {
 		});
 
 		// Log the conversation turn completion
-		logWithRequestId.debug("Conversation turn completed", {
+		logger.debug("Conversation turn completed", {
 			assistantMessageId,
 			finalConversationLength: store.messages.length,
 			responseWasStreamed: store.streamingResponse.length > 0,
@@ -167,5 +178,4 @@ export function startNewConversation(): void {
 	store.error = null;
 	store.debugInfo = null;
 	store.streamingResponse = "";
-	store.currentRequestId = null;
 }
