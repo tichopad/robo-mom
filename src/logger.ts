@@ -1,4 +1,5 @@
 import winston from "winston";
+import { getRequestId } from "#src/context/request-context.ts";
 
 const logLevel = process.env.LOG_LEVEL || "info";
 const logFile = process.env.LOG_FILE || "debug.log";
@@ -26,7 +27,7 @@ const orderedJsonFormat = winston.format.printf((info) => {
 	const result: Record<string, unknown> = {
 		timestamp: info.timestamp,
 		level: info.level,
-		requestId: info.requestId ?? null,
+		requestId: info.requestId ?? getRequestId() ?? null,
 		message: info.message,
 	};
 

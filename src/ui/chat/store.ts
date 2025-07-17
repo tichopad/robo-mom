@@ -1,4 +1,5 @@
 import { proxy, useSnapshot } from "valtio";
+import { runWithRequestId } from "#src/context/request-context.ts";
 import { createStreamingChatCompletion } from "#src/llms/chat-completion.ts";
 import { logger } from "#src/logger.ts";
 import type { Message } from "#src/ui/types.ts";
@@ -46,9 +47,19 @@ const sendRequestToLLM = createStreamingChatCompletion({
 
 /**
  * Send the current user input to the LLM and pipes the streaming response to the store.
+ * Automatically generates a request ID for this conversation turn and logs it.
  */
 export async function sendUserInputToLLM(): Promise<void> {
-	// Generate a request ID for this conversation turn
+	const requestId = createRandomString();
+	return runWithRequestId(requestId, sendUserInputToLLMWithoutRequestId);
+}
+
+/**
+ * Send the current user input to the LLM and pipes the streaming response to the store.
+ * The is the inner function that actually sends the request to the LLM.
+ * @returns A promise that resolves when the request is complete.
+ */
+async function sendUserInputToLLMWithoutRequestId(): Promise<void> {
 	const userMessageId = createRandomString();
 
 	const input = store.input.trim();
@@ -57,9 +68,12 @@ export async function sendUserInputToLLM(): Promise<void> {
 		logger.error("Input is empty, skipping request.");
 		return;
 	}
-	if (!process.env.OPENAI_API_KEY) {
-		store.error = "OPENAI_API_KEY not found. Please add it to your .env file.";
-		logger.error("OPENAI_API_KEY not found. Please add it to your .env file.");
+	if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+		store.error =
+			"GOOGLE_GENERATIVE_AI_API_KEY not found. Please add it to your .env file.";
+		logger.error(
+			"GOOGLE_GENERATIVE_AI_API_KEY not found. Please add it to your .env file.",
+		);
 		return;
 	}
 
