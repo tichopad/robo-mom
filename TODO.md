@@ -4,7 +4,7 @@
 
 - [ ] Data loading eats up too much memory -> verify and fix
 - [ ] Changes to Frontmatter attributes are not detected when re-indexing
-- [ ] Use Node's async context to track the current request ID instead of props drilling
+- [x] Use Node's async context to track the current request ID instead of props drilling
 
 ## Features
 
