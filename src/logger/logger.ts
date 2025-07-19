@@ -1,9 +1,6 @@
-import { getRequestId } from "#src/context/request-context.ts";
 import winston from "winston";
+import { getRequestId } from "#src/context/request-context.ts";
 import { InMemoryTransport } from "./in-memory-transport.ts";
-
-const logLevel = process.env.LOG_LEVEL || "info";
-const logFile = process.env.LOG_FILE || "debug.log";
 
 // Custom format to sort properties in desired order (optimized)
 // TODO: replace with the default JSON format once there's a nicer log viewer than just inspecting the log file
@@ -41,6 +38,8 @@ const orderedJsonFormat = winston.format.printf((info) => {
 	return JSON.stringify(result);
 });
 
+// Format to attach the request ID to the log entry
+// Request ID groups logs related to a single LLM request cycle.
 const attachRequestIdFormat = winston.format((info) => {
 	if (typeof info === "object" && info !== null) {
 		info.requestId ??= getRequestId();
@@ -48,6 +47,7 @@ const attachRequestIdFormat = winston.format((info) => {
 	return info;
 });
 
+// Common format for all logs
 const format = winston.format.combine(
 	winston.format.timestamp({
 		format: "YYYY-MM-DD HH:mm:ss.SSS",
@@ -58,12 +58,14 @@ const format = winston.format.combine(
 	orderedJsonFormat,
 );
 
+// Common metadata for all logs
 const defaultMeta = {
 	service: "robo-mom",
 };
 
+// Default transport for application logs
 const defaultLogFileTransport = new winston.transports.File({
-	filename: logFile,
+	filename: process.env.LOG_FILE || "debug.log",
 	level: "debug",
 });
 
@@ -71,18 +73,11 @@ const defaultLogFileTransport = new winston.transports.File({
  * The default application logger that logs to a file.
  */
 export const logger = winston.createLogger({
-	level: logLevel,
+	level: process.env.LOG_LEVEL || "info",
 	defaultMeta,
 	transports: [defaultLogFileTransport],
 	exceptionHandlers: [defaultLogFileTransport],
 	format,
-});
-
-// Test that logging works
-logger.info("Logger initialized", {
-	logLevel,
-	logFile,
-	timestamp: new Date().toISOString(),
 });
 
 /**
