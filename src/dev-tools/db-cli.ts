@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { defineCommand, runMain } from "citty";
 import { db } from "#src/db/client.ts";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 import { print } from "#src/print.ts";
 
 const main = defineCommand({

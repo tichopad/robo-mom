@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "#src/db/client.ts";
 import { notesTable } from "#src/db/schema.ts";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 
 type AboutAuthorToolOptions = {
 	onDebugInfo?: (info: string) => void;

@@ -1,5 +1,9 @@
 import { type TestContext, describe, test } from "node:test";
-import { getRequestId, setRequestId, runWithRequestId } from "#src/context/request-context.ts";
+import {
+	getRequestId,
+	runWithRequestId,
+	setRequestId,
+} from "#src/context/request-context.ts";
 import { createRandomString } from "#src/utils.ts";
 
 describe("Request Context", () => {
@@ -75,15 +79,15 @@ describe("Request Context", () => {
 
 		const promises = [
 			runWithRequestId(requestId1, async () => {
-				await new Promise(resolve => setTimeout(resolve, 10));
+				await new Promise((resolve) => setTimeout(resolve, 10));
 				return getRequestId();
 			}),
 			runWithRequestId(requestId2, async () => {
-				await new Promise(resolve => setTimeout(resolve, 5));
+				await new Promise((resolve) => setTimeout(resolve, 5));
 				return getRequestId();
 			}),
 			runWithRequestId(requestId3, async () => {
-				await new Promise(resolve => setTimeout(resolve, 15));
+				await new Promise((resolve) => setTimeout(resolve, 15));
 				return getRequestId();
 			}),
 		];
@@ -163,7 +167,7 @@ describe("Request Context", () => {
 		let capturedRequestId: string | null = null;
 
 		await runWithRequestId(requestId, async () => {
-			await new Promise(resolve => setTimeout(resolve, 10));
+			await new Promise((resolve) => setTimeout(resolve, 10));
 			capturedRequestId = getRequestId();
 		});
 
@@ -177,7 +181,7 @@ describe("Request Context", () => {
 
 		await runWithRequestId(requestId, async () => {
 			beforeAwaitId = getRequestId();
-			await new Promise(resolve => setTimeout(resolve, 10));
+			await new Promise((resolve) => setTimeout(resolve, 10));
 			afterAwaitId = getRequestId();
 		});
 

@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import z from "zod";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 import { queryDocuments } from "#src/query-notes/query-documents.ts";
 
 type SearchNotesToolOptions = {

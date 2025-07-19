@@ -3,31 +3,33 @@ description: Base rules for the project
 globs:
 alwaysApply: true
 ---
-1. The project uses the latest Node.js version, which supports running Typescript files natively
-2. Because of rule 1), there's no need for additional tools like `tsx` or `ts-node`, just use Node.js
-3. The project uses `pnpm` as a dependency manager
-4. The project uses Drizzle ORM for all database operations
-5. The project uses PGlite (see https://pglite.dev/docs/about) as database - it's a file-based Postgres fork
-6. When choosing additional dependencies, prefer using Deno's `@std` libraries (see https://jsr.io/@std) or some of the `unjs` (see https://unjs.io/packages?q=&order=1&orderBy=title) ecosystem libraries
-7. Prefer Vercel's `ai` SDK (see https://sdk.vercel.ai/docs/introduction) for all AI/LLM operations
-8. Always prefer functional programming patterns where applicable, but OOP is acceptable when needed
-9. The project is a CLI application using primarily the `citty` package for the base CLI interface (see https://raw.githubusercontent.com/unjs/citty/refs/heads/main/README.md)
-10. Always assume the env. file is set up correctly.
-11. The project uses the `winston` package for logging.
-12. The project uses the `zod` package for validation.
-13. The project uses `ink` for rendering the terminal UI.
-14. The project is a CLI application which goal is to allow the user to chat with their notes.
-15. Prioritize simplicity and readability. Code should be easy to understand when returning to the codebase after weeks or months.
-16. Always be mindful of I/O and CPU performance, especially for this type of application that involves heavy processing.
-17. Every function and method must be commented using JSDoc syntax (without JSDoc types since we use TypeScript).
-18. Import/Export Practices:
+- The project uses the latest Node.js version, which supports running Typescript files natively
+- Because of rule 1), there's no need for additional tools like `tsx` or `ts-node`, just use Node.js
+- The project uses `pnpm` as a dependency manager
+- The project uses Drizzle ORM for all database operations
+- The project uses PGlite (see https://pglite.dev/docs/about) as database - it's a file-based Postgres fork
+- When choosing additional dependencies, prefer using Deno's `@std` libraries (see https://jsr.io/@std) or some of the `unjs` (see https://unjs.io/packages?q=&order=1&orderBy=title) ecosystem libraries
+- Prefer Vercel's `ai` SDK (see https://sdk.vercel.ai/docs/introduction) for all AI/LLM operations
+- Always prefer functional programming patterns where applicable, but OOP is acceptable when needed
+- The project is a CLI application using primarily the `citty` package for the base CLI interface (see https://raw.githubusercontent.com/unjs/citty/refs/heads/main/README.md)
+- Always assume the env. file is set up correctly.
+- The project uses the `winston` package for logging.
+- The project uses the `zod` package for validation.
+- The project uses `ink` for rendering the terminal UI.
+- The project is a CLI application which goal is to allow the user to chat with their notes.
+- Prioritize simplicity and readability. Code should be easy to understand when returning to the codebase after weeks or months.
+- Always be mindful of I/O and CPU performance, especially for this type of application that involves heavy processing.
+- Every function and method must be commented using JSDoc syntax (without JSDoc types since we use TypeScript).
+- Import/Export Practices:
     - Avoid barrel exports and barrel imports to maximize tree-shaking
     - Use granular imports for better performance
-    - Always use `import type` or `import { type }` for type imports
-19. Prefer Biome, pnpm, `@std/` (Deno's standard lib) libraries, and unjs-backed libraries for their simplicity and performance-focused design.
-20. Always strongly type code. Use parsing/validation libraries (preferably `zod`) for data from external sources (network, filesystem, etc.).
-21. Always integrate logging for debugging and production observability.
-12. The project uses the `zod` package for validation.
-13. The project uses `ink` for rendering the terminal UI.
-14. The project is a CLI application which goal is to allow the user to chat with their notes.
-15. Use the `#src` prefix for all internal files imports EXCEPT when importing from a neighboring file.
+    - Always use `import type` or `import { type }` for type imports.
+- Prefer Biome, pnpm, `@std/` (Deno's standard lib) libraries, and unjs-backed libraries for their simplicity and performance-focused design.
+- Always strongly type code. Use parsing/validation libraries (preferably `zod`) for data from external sources (network, filesystem, etc.).
+- Always integrate logging for debugging and production observability.
+- The project uses the `zod` package for validation.
+- The project uses `ink` for rendering the terminal UI.
+- The project is a CLI application which goal is to allow the user to chat with their notes.
+- Use the `#src` prefix for all internal files imports EXCEPT when importing from a neighboring file.
+- Write tests for all new code (if feasible).
+- Write code in a way that is easy to test without mocking dependencies.

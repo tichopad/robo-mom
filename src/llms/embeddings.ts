@@ -1,5 +1,5 @@
 import type { FeatureExtractionPipeline } from "@huggingface/transformers";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 
 let extractorNomicV1: FeatureExtractionPipeline | null = null;
 

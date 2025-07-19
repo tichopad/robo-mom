@@ -9,7 +9,7 @@ import { createAboutAuthorTool } from "#src/llms/tools/about-author.ts";
 import { createReadFileTool } from "#src/llms/tools/read-file.ts";
 import { createRipgrepFilesTool } from "#src/llms/tools/ripgrep-files.ts";
 import { createSearchNotesTool } from "#src/llms/tools/search-notes.ts";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 import { isError, isSerializableObject } from "#src/utils.ts";
 
 function systemPrompt(tools: Record<string, Tool>) {

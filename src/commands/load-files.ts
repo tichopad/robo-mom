@@ -1,6 +1,6 @@
 import { defineCommand } from "citty";
 import { loadMarkdownFilesFromGlob } from "../data-loader.ts";
-import { logger } from "../logger.ts";
+import { logger } from "../logger/logger.ts";
 import { print } from "../print.ts";
 
 export default defineCommand({

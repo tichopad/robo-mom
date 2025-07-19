@@ -32,7 +32,7 @@
  */
 
 import { defineCommand, runMain } from "citty";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 import { print } from "#src/print.ts";
 import { executeRipgrepSearch } from "#src/query-notes/ripgrep.ts";
 

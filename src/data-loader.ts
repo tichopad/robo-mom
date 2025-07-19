@@ -10,7 +10,7 @@ import { chunkMarkdown } from "#src/chunk-text.ts";
 import { db } from "#src/db/client.ts";
 import { notesTable } from "#src/db/schema.ts";
 import { generateEmbedding } from "#src/llms/embeddings.ts";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 import { print } from "#src/print.ts";
 
 export async function loadMarkdownFilesFromGlob(

@@ -14,3 +14,4 @@ alwaysApply: true
 - Prefer `t.assert` over direct `assert` calls for better test runner integration
 - Test both synchronous and asynchronous scenarios
 - Verify cleanup and isolation after exceptions or errors
+- Avoid mocking dependencies unless absolutely necessary - rather write the code to be testable

@@ -17,7 +17,7 @@
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import { rgPath } from "@vscode/ripgrep";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 
 /**
  * Security: Define the allowed directory for file operations

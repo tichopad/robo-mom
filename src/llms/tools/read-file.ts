@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { tool } from "ai";
 import { z } from "zod";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 
 // TODO: this shouldn't be static
 const NOTES_DIRECTORY = resolve(

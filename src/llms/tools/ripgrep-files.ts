@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 import { executeRipgrepSearch as ripgrepSearch } from "#src/query-notes/ripgrep.ts";
 
 type RipgrepFilesToolParams = {

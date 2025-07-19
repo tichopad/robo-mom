@@ -1,6 +1,6 @@
 import { defineCommand } from "citty";
 import { runApp } from "../app.tsx";
-import { logger } from "../logger.ts";
+import { logger } from "../logger/logger.ts";
 
 export default defineCommand({
 	meta: {

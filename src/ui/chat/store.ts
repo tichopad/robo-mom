@@ -1,7 +1,7 @@
 import { proxy, useSnapshot } from "valtio";
 import { runWithRequestId } from "#src/context/request-context.ts";
 import { createStreamingChatCompletion } from "#src/llms/chat-completion.ts";
-import { logger } from "#src/logger.ts";
+import { logger } from "#src/logger/logger.ts";
 import type { Message } from "#src/ui/types.ts";
 import { createRandomString } from "#src/utils.ts";
 

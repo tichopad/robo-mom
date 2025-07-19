@@ -1,5 +1,6 @@
-import winston from "winston";
 import { getRequestId } from "#src/context/request-context.ts";
+import winston from "winston";
+import { InMemoryTransport } from "./in-memory-transport.ts";
 
 const logLevel = process.env.LOG_LEVEL || "info";
 const logFile = process.env.LOG_FILE || "debug.log";
@@ -14,7 +15,8 @@ const orderedJsonFormat = winston.format.printf((info) => {
 			key !== "level" &&
 			key !== "service" &&
 			key !== "message" &&
-			key !== "timestamp"
+			key !== "timestamp" &&
+			key !== "requestId"
 		) {
 			otherKeys.push(key);
 		}
@@ -27,7 +29,7 @@ const orderedJsonFormat = winston.format.printf((info) => {
 	const result: Record<string, unknown> = {
 		timestamp: info.timestamp,
 		level: info.level,
-		requestId: info.requestId ?? getRequestId() ?? null,
+		requestId: info.requestId,
 		message: info.message,
 	};
 
@@ -39,26 +41,41 @@ const orderedJsonFormat = winston.format.printf((info) => {
 	return JSON.stringify(result);
 });
 
+const attachRequestIdFormat = winston.format((info) => {
+	if (typeof info === "object" && info !== null) {
+		info.requestId ??= getRequestId();
+	}
+	return info;
+});
+
+const format = winston.format.combine(
+	winston.format.timestamp({
+		format: "YYYY-MM-DD HH:mm:ss.SSS",
+	}),
+	attachRequestIdFormat(),
+	winston.format.errors({ stack: true }),
+	winston.format.splat(),
+	orderedJsonFormat,
+);
+
+const defaultMeta = {
+	service: "robo-mom",
+};
+
 const defaultLogFileTransport = new winston.transports.File({
 	filename: logFile,
 	level: "debug",
-	format: winston.format.combine(
-		winston.format.timestamp({
-			format: "YYYY-MM-DD HH:mm:ss.SSS",
-		}),
-		winston.format.errors({ stack: true }),
-		winston.format.splat(),
-		orderedJsonFormat,
-	),
 });
 
+/**
+ * The default application logger that logs to a file.
+ */
 export const logger = winston.createLogger({
 	level: logLevel,
-	defaultMeta: {
-		service: "robo-mom",
-	},
+	defaultMeta,
 	transports: [defaultLogFileTransport],
 	exceptionHandlers: [defaultLogFileTransport],
+	format,
 });
 
 // Test that logging works
@@ -67,3 +84,25 @@ logger.info("Logger initialized", {
 	logFile,
 	timestamp: new Date().toISOString(),
 });
+
+/**
+ * Creates a test logger that logs to an in-memory transport which can be inspected.
+ * @returns The test logger and the in-memory transport.
+ */
+export const createTestLogger = () => {
+	const inMemoryTransport = new InMemoryTransport();
+	const testLogger = winston.createLogger({
+		level: "debug",
+		defaultMeta,
+		format,
+		transports: [inMemoryTransport],
+	});
+
+	// Set max listeners to prevent warnings during tests and heavy usage
+	testLogger.setMaxListeners(20);
+
+	return {
+		logger: testLogger,
+		inMemoryTransport,
+	};
+};
