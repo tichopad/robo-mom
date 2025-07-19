@@ -1,6 +1,6 @@
 import { Box, Text } from "ink";
 
-export type Props = {
+type Props = {
 	message: string;
 };
 

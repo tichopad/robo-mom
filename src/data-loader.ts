@@ -69,7 +69,7 @@ export async function loadMarkdownFilesFromGlob(
  * @param filePath - The path to the Markdown file.
  * @returns `true` if the file was loaded, `false` if it was skipped.
  */
-export async function loadMarkdownFileToDb(filePath: string): Promise<boolean> {
+async function loadMarkdownFileToDb(filePath: string): Promise<boolean> {
 	logger.debug("Processing Markdown file: %s", filePath);
 
 	// Read file content and calculate checksum

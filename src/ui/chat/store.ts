@@ -1,5 +1,6 @@
 import { proxy, useSnapshot } from "valtio";
 import { runWithRequestId } from "#src/context/request-context.ts";
+import { env } from "#src/env.ts";
 import { createStreamingChatCompletion } from "#src/llms/chat-completion.ts";
 import { logger } from "#src/logger/logger.ts";
 import type { Message } from "#src/ui/types.ts";
@@ -21,7 +22,7 @@ type Store = {
 };
 
 /** Reactive chat store. */
-export const store = proxy<Store>({
+const store = proxy<Store>({
 	messages: [],
 	input: "",
 	isLoading: false,
@@ -68,9 +69,8 @@ async function sendUserInputToLLMWithoutRequestId(): Promise<void> {
 		logger.error("Input is empty, skipping request.");
 		return;
 	}
-	if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-		store.error =
-			"GOOGLE_GENERATIVE_AI_API_KEY not found. Please add it to your .env file.";
+	if (!env.GOOGLE_GENERATIVE_AI_API_KEY) {
+		store.error = "Missing Gemini API key.";
 		logger.error(
 			"GOOGLE_GENERATIVE_AI_API_KEY not found. Please add it to your .env file.",
 		);

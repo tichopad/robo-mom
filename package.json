@@ -3,31 +3,29 @@
 	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
-		"check": "pnpm run check:biome && pnpm run check:ts",
+		"check": "pnpm run check:biome && pnpm run check:ts && pnpm run check:knip",
 		"check:biome": "biome check --fix .",
 		"check:ts": "tsc",
-		"test": "node --test",
-		"test:only": "node --test-only",
+		"check:knip": "knip",
 		"db:migrate": "drizzle-kit generate && tsx --env-file=.env ./src/db/migrate.ts",
 		"db:cli": "tsx --env-file=.env ./src/dev-tools/db-cli.ts",
 		"db:studio": "drizzle-kit studio",
-		"cli": "tsx --env-file=.env ./src/cli.ts",
 		"rag:cli": "tsx --env-file=.env ./src/dev-tools/rag-cli.ts",
-		"ripgrep:cli": "tsx --env-file=.env ./src/dev-tools/ripgrep-cli.ts"
+		"ripgrep:cli": "tsx --env-file=.env ./src/dev-tools/ripgrep-cli.ts",
+		"start": "tsx --env-file=.env ./src/cli.ts",
+		"test": "node --test",
+		"test:only": "node --test-only"
 	},
-	"packageManager": "pnpm@10.12.4",
+	"packageManager": "pnpm@10.13.1",
 	"imports": {
 		"#src/*": "./src/*"
 	},
 	"dependencies": {
-		"@ai-sdk/anthropic": "1.2.12",
 		"@ai-sdk/google": "1.2.21",
 		"@electric-sql/pglite": "0.3.0",
 		"@huggingface/transformers": "3.6.0",
 		"@std/collections": "npm:@jsr/std__collections@1.0.10",
 		"@std/front-matter": "npm:@jsr/std__front-matter@1.0.9",
-		"@std/fs": "npm:@jsr/std__fs@1.0.16",
-		"@std/text": "npm:@jsr/std__text@1.0.12",
 		"@vscode/ripgrep": "1.15.14",
 		"ai": "4.3.16",
 		"citty": "0.1.6",
@@ -44,6 +42,7 @@
 		"@biomejs/biome": "1.9.4",
 		"@types/node": "22.15.30",
 		"@types/react": "19.1.6",
+		"knip": "5.62.0",
 		"typescript": "5.8.3",
 		"winston-transport": "4.9.0"
 	}

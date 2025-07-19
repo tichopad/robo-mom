@@ -34,7 +34,7 @@ const NOTES_DIRECTORY = resolve("example_notes");
  * @property {string[]} [flags] - Additional ripgrep flags (e.g., ['-i'] for case-insensitive)
  * @property {number} [maxResults] - Maximum number of results to return (default: 50)
  */
-export interface RipgrepOptions {
+interface RipgrepOptions {
 	/** The ripgrep pattern to search for (supports regex) */
 	pattern: string;
 	/** Additional ripgrep flags (e.g., ['-i'] for case-insensitive, ['-w'] for word boundaries) */
@@ -51,7 +51,7 @@ export interface RipgrepOptions {
  * @property {number} totalMatches - Total number of matches found (before limiting)
  * @property {boolean} limited - Whether results were limited due to maxResults constraint
  */
-export interface RipgrepResult {
+interface RipgrepResult {
 	/** Array of matching lines with file paths and line numbers */
 	results: string[];
 	/** Total number of matches found (before limiting) */

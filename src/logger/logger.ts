@@ -1,5 +1,6 @@
 import winston from "winston";
 import { getRequestId } from "#src/context/request-context.ts";
+import { env } from "#src/env.ts";
 import { InMemoryTransport } from "./in-memory-transport.ts";
 
 // Custom format to sort properties in desired order (optimized)
@@ -63,20 +64,22 @@ const defaultMeta = {
 	service: "robo-mom",
 };
 
-// Default transport for application logs
-const defaultLogFileTransport = new winston.transports.File({
-	filename: process.env.LOG_FILE || "debug.log",
-	level: "debug",
-});
-
 /**
  * The default application logger that logs to a file.
  */
 export const logger = winston.createLogger({
-	level: process.env.LOG_LEVEL || "info",
+	level: env.LOG_LEVEL,
 	defaultMeta,
-	transports: [defaultLogFileTransport],
-	exceptionHandlers: [defaultLogFileTransport],
+	transports: [
+		new winston.transports.File({
+			filename: env.LOG_FILE,
+		}),
+	],
+	exceptionHandlers: [
+		new winston.transports.File({
+			filename: env.LOG_FILE,
+		}),
+	],
 	format,
 });
 

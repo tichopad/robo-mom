@@ -36,10 +36,3 @@ export const print = {
 		console.log(message, ...args);
 	},
 };
-
-/**
- * Print an empty line for spacing
- */
-export function printLine(): void {
-	console.log();
-}

@@ -7,11 +7,7 @@
  * @param overlap - The number of characters to overlap between chunks.
  * @returns An array of chunks.
  */
-export function chunkText(
-	text: string,
-	charLimit: number,
-	overlap = 0,
-): string[] {
+function chunkText(text: string, charLimit: number, overlap = 0): string[] {
 	if (text.trim().length === 0) return [];
 	if (text.length <= charLimit) return [text];
 
@@ -24,8 +20,8 @@ export function chunkText(
 	return [firstChunk, ...chunkText(rest, charLimit, overlap)];
 }
 
-export type Chunk = {
-	content: string;
+type Chunk = {
+	content: string; // Chunk text content
 	index: number; // Index of the chunk in the processing sequence
 };
 

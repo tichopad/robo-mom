@@ -1,9 +1,11 @@
 # TODO
 
-## Bugs, issues and refactors
+## Bugs, issues, refactors and improvements
 
-- [ ] Data loading eats up too much memory -> verify and fix
-- [ ] Changes to Frontmatter attributes are not detected when re-indexing
+- [ ] Data loading seems to eat too much memory -> verify and fix
+- [ ] Store the LLM inference input and output somewhere in a separate spot where it can be used for debugging and analysis
+- [ ] Filename vector search might not work as expected - consider a different approach for including the filename in the context search
+- [ ] Consider smaller chunks and including -1 and +1 indexed chunks in the context search for a more accurate context retrieval
 - [x] Use Node's async context to track the current request ID instead of props drilling
 
 ## Features
