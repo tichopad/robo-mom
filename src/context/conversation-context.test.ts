@@ -3,7 +3,6 @@ import {
 	getConversationId,
 	runWithConversationId,
 } from "#src/context/conversation-context.ts";
-import { createRandomString } from "#src/utils.ts";
 
 describe("Conversation Context", () => {
 	test("getConversationId returns null when no context is set", (t: TestContext) => {
@@ -11,7 +10,7 @@ describe("Conversation Context", () => {
 	});
 
 	test("runWithConversationId executes function with correct conversation ID and returns result", (t: TestContext) => {
-		const conversationId = createRandomString();
+		const conversationId = crypto.randomUUID();
 		const expectedResult = "test result";
 
 		const result = runWithConversationId(conversationId, () => {
@@ -23,8 +22,8 @@ describe("Conversation Context", () => {
 	});
 
 	test("conversation ID is isolated between different contexts", (t: TestContext) => {
-		const conversationId1 = createRandomString();
-		const conversationId2 = createRandomString();
+		const conversationId1 = crypto.randomUUID();
+		const conversationId2 = crypto.randomUUID();
 
 		const result1 = runWithConversationId(conversationId1, () =>
 			getConversationId(),
@@ -39,9 +38,9 @@ describe("Conversation Context", () => {
 	});
 
 	test("multiple concurrent contexts work independently with async operations", async (t: TestContext) => {
-		const conversationId1 = createRandomString();
-		const conversationId2 = createRandomString();
-		const conversationId3 = createRandomString();
+		const conversationId1 = crypto.randomUUID();
+		const conversationId2 = crypto.randomUUID();
+		const conversationId3 = crypto.randomUUID();
 
 		const promises = [
 			runWithConversationId(conversationId1, async () => {
@@ -66,8 +65,8 @@ describe("Conversation Context", () => {
 	});
 
 	test("nested contexts behave correctly", async (t: TestContext) => {
-		const outerConversationId = createRandomString();
-		const innerConversationId = createRandomString();
+		const outerConversationId = crypto.randomUUID();
+		const innerConversationId = crypto.randomUUID();
 		let outerIdAfterInner: string | null = null;
 
 		await runWithConversationId(outerConversationId, async () => {
@@ -85,7 +84,7 @@ describe("Conversation Context", () => {
 	});
 
 	test("conversation ID is not accessible outside of its context", (t: TestContext) => {
-		const conversationId = createRandomString();
+		const conversationId = crypto.randomUUID();
 
 		runWithConversationId(conversationId, () => {
 			t.assert.strictEqual(getConversationId(), conversationId);
@@ -96,7 +95,7 @@ describe("Conversation Context", () => {
 	});
 
 	test("exceptions are properly handled and context is cleaned up", async (t: TestContext) => {
-		const conversationId = createRandomString();
+		const conversationId = crypto.randomUUID();
 		const testError = new Error("Test exception");
 
 		await t.assert.rejects(
@@ -112,7 +111,7 @@ describe("Conversation Context", () => {
 	});
 
 	test("synchronous exceptions are properly handled", (t: TestContext) => {
-		const conversationId = createRandomString();
+		const conversationId = crypto.randomUUID();
 		const testError = new Error("Sync test exception");
 
 		t.assert.throws(() => {
@@ -135,7 +134,7 @@ describe("Conversation Context", () => {
 	});
 
 	test("supports both sync and async functions", async (t: TestContext) => {
-		const conversationId = createRandomString();
+		const conversationId = crypto.randomUUID();
 
 		// Test sync function
 		const syncResult = runWithConversationId(conversationId, () => {

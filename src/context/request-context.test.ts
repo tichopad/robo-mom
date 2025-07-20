@@ -3,7 +3,6 @@ import {
 	getRequestId,
 	runWithRequestId,
 } from "#src/context/request-context.ts";
-import { createRandomString } from "#src/utils.ts";
 
 describe("Request Context", () => {
 	test("getRequestId returns null when no context is set", (t: TestContext) => {
@@ -11,7 +10,7 @@ describe("Request Context", () => {
 	});
 
 	test("runWithRequestId executes function with correct request ID and returns result", (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 		const expectedResult = "test result";
 		let capturedRequestId: string | null = null;
 
@@ -25,9 +24,9 @@ describe("Request Context", () => {
 	});
 
 	test("context is isolated between concurrent operations", async (t: TestContext) => {
-		const requestId1 = createRandomString();
-		const requestId2 = createRandomString();
-		const requestId3 = createRandomString();
+		const requestId1 = crypto.randomUUID();
+		const requestId2 = crypto.randomUUID();
+		const requestId3 = crypto.randomUUID();
 
 		const promises = [
 			runWithRequestId(requestId1, async () => {
@@ -52,8 +51,8 @@ describe("Request Context", () => {
 	});
 
 	test("nested contexts work correctly - inner overrides outer, outer restores", async (t: TestContext) => {
-		const outerRequestId = createRandomString();
-		const innerRequestId = createRandomString();
+		const outerRequestId = crypto.randomUUID();
+		const innerRequestId = crypto.randomUUID();
 		let innerCapturedRequestId: string | null = null;
 		let outerRequestIdAfterInner: string | null = null;
 
@@ -72,7 +71,7 @@ describe("Request Context", () => {
 	});
 
 	test("context persists across async boundaries and await calls", async (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 		let beforeAwaitId: string | null = null;
 		let afterAwaitId: string | null = null;
 		let afterMultipleAwaits: string | null = null;
@@ -91,7 +90,7 @@ describe("Request Context", () => {
 	});
 
 	test("context is properly cleaned up after async exceptions", async (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 		let contextDuringException: string | null = null;
 
 		try {
@@ -109,7 +108,7 @@ describe("Request Context", () => {
 	});
 
 	test("context is properly cleaned up after synchronous exceptions", (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 		let contextDuringException: string | null = null;
 
 		try {
@@ -126,7 +125,7 @@ describe("Request Context", () => {
 	});
 
 	test("synchronous functions work correctly", (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 		let capturedRequestId: string | null = null;
 
 		const result = runWithRequestId(requestId, () => {
@@ -139,7 +138,7 @@ describe("Request Context", () => {
 	});
 
 	test("functions returning undefined or null work correctly", (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 
 		const undefinedResult = runWithRequestId(requestId, () => undefined);
 		const nullResult = runWithRequestId(requestId, () => null);

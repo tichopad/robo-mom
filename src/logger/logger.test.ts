@@ -4,7 +4,6 @@ import {
 	runWithRequestId,
 } from "#src/context/request-context.ts";
 import { createTestLogger } from "#src/logger/logger.ts";
-import { createRandomString } from "#src/utils.ts";
 
 describe("Logger with Request ID", () => {
 	const { logger: testLogger, inMemoryTransport } = createTestLogger();
@@ -37,7 +36,7 @@ describe("Logger with Request ID", () => {
 	});
 
 	test("logger works with request context", async (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 
 		await runWithRequestId(requestId, async () => {
 			t.assert.strictEqual(getRequestId(), requestId);
@@ -54,7 +53,7 @@ describe("Logger with Request ID", () => {
 	});
 
 	test("logger works with different log levels in request context", async (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 
 		await runWithRequestId(requestId, async () => {
 			// Test all log levels
@@ -88,7 +87,7 @@ describe("Logger with Request ID", () => {
 	});
 
 	test("logger works with metadata in request context", async (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 
 		await runWithRequestId(requestId, async () => {
 			const metadata = {
@@ -109,7 +108,7 @@ describe("Logger with Request ID", () => {
 	});
 
 	test("logger child works with request context", async (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 
 		await runWithRequestId(requestId, async () => {
 			const childLogger = testLogger.child({ component: "test-component" });
@@ -124,7 +123,7 @@ describe("Logger with Request ID", () => {
 	});
 
 	test("logger works with error objects in request context", async (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 		const errorMessage = "Test error for logging";
 
 		await runWithRequestId(requestId, async () => {
@@ -144,8 +143,8 @@ describe("Logger with Request ID", () => {
 	});
 
 	test("logger works across multiple request contexts", async (t: TestContext) => {
-		const requestId1 = createRandomString();
-		const requestId2 = createRandomString();
+		const requestId1 = crypto.randomUUID();
+		const requestId2 = crypto.randomUUID();
 
 		await runWithRequestId(requestId1, async () => {
 			t.assert.strictEqual(getRequestId(), requestId1);
@@ -167,9 +166,9 @@ describe("Logger with Request ID", () => {
 	});
 
 	test("logger works with concurrent request contexts", async (t: TestContext) => {
-		const requestId1 = createRandomString();
-		const requestId2 = createRandomString();
-		const requestId3 = createRandomString();
+		const requestId1 = crypto.randomUUID();
+		const requestId2 = crypto.randomUUID();
+		const requestId3 = crypto.randomUUID();
 
 		const promises = [
 			runWithRequestId(requestId1, async () => {
@@ -198,8 +197,8 @@ describe("Logger with Request ID", () => {
 	});
 
 	test("logger works with nested request contexts", async (t: TestContext) => {
-		const outerRequestId = createRandomString();
-		const innerRequestId = createRandomString();
+		const outerRequestId = crypto.randomUUID();
+		const innerRequestId = crypto.randomUUID();
 
 		await runWithRequestId(outerRequestId, async () => {
 			t.assert.strictEqual(getRequestId(), outerRequestId);
@@ -229,7 +228,7 @@ describe("Logger with Request ID", () => {
 	});
 
 	test("logger works without context after having context", async (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 
 		// First log without context
 		t.assert.strictEqual(getRequestId(), null);
@@ -260,7 +259,7 @@ describe("Logger with Request ID", () => {
 	});
 
 	test("logger handles exceptions gracefully", async (t: TestContext) => {
-		const requestId = createRandomString();
+		const requestId = crypto.randomUUID();
 
 		try {
 			await runWithRequestId(requestId, async () => {

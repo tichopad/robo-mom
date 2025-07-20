@@ -4,7 +4,6 @@ import { env } from "#src/env.ts";
 import { createStreamingChatCompletion } from "#src/llms/chat-completion.ts";
 import { logger } from "#src/logger/logger.ts";
 import type { Message } from "#src/ui/types.ts";
-import { createRandomString } from "#src/utils.ts";
 
 type Store = {
 	/** The messages in the chat. */
@@ -51,7 +50,7 @@ const sendRequestToLLM = createStreamingChatCompletion({
  * Automatically generates a request ID for this conversation turn and logs it.
  */
 export async function sendUserInputToLLM(): Promise<void> {
-	const requestId = createRandomString();
+	const requestId = crypto.randomUUID();
 	return runWithRequestId(requestId, sendUserInputToLLMWithoutRequestId);
 }
 
@@ -61,7 +60,7 @@ export async function sendUserInputToLLM(): Promise<void> {
  * @returns A promise that resolves when the request is complete.
  */
 async function sendUserInputToLLMWithoutRequestId(): Promise<void> {
-	const userMessageId = createRandomString();
+	const userMessageId = crypto.randomUUID();
 
 	const input = store.input.trim();
 	if (input === "") {
@@ -118,10 +117,7 @@ async function sendUserInputToLLMWithoutRequestId(): Promise<void> {
 			}
 		}
 
-		// Log the final response with structured data
-		const assistantMessageId = createRandomString();
 		logger.debug("LLM response completed", {
-			assistantMessageId,
 			responseLength: store.streamingResponse.length,
 			totalChunks: chunkCount,
 			approximateTokens: totalTokens,
@@ -130,7 +126,6 @@ async function sendUserInputToLLMWithoutRequestId(): Promise<void> {
 
 		// Log the full response content for debugging
 		logger.debug("LLM response content", {
-			assistantMessageId,
 			content: store.streamingResponse.trim(),
 		});
 	} catch (error) {
@@ -147,7 +142,7 @@ async function sendUserInputToLLMWithoutRequestId(): Promise<void> {
 		store.error = errorMessage;
 	} finally {
 		// Compose the whole response as an assistant message
-		const assistantMessageId = createRandomString();
+		const assistantMessageId = crypto.randomUUID();
 		store.messages.push({
 			role: "assistant",
 			content: store.streamingResponse.trim(),

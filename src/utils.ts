@@ -1,18 +1,3 @@
-const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-/**
- * Create a random string of the given length.
- * @param length - The length of the string to create.
- * @returns A random string of the given length.
- */
-export function createRandomString(length = 12): string {
-	let result = "";
-	for (let i = 0; i < length; i++) {
-		result += chars.charAt(Math.floor(Math.random() * chars.length));
-	}
-	return result;
-}
-
 /**
  * Check if the given value is an Error.
  * @param error - The value to check.

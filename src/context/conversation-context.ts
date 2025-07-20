@@ -32,7 +32,7 @@ export function getConversationId(): string | null {
  * @returns The result of the function.
  *
  * @example
- * const conversationId = createRandomString();
+ * const conversationId = crypto.randomUUID();
  * const result = await runWithConversationId(conversationId, async () => {
  *   // All operations here have access to the conversation ID
  *   const currentId = getConversationId(); // Returns the conversation ID
