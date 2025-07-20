@@ -49,7 +49,6 @@ export function createReadFileTool({ onDebugInfo }: ReadFileToolParams) {
 				),
 		}),
 		execute: async ({ filePath }) => {
-			// TODO: use requestId
 			logger.info("Tool readFile initiated", {
 				toolName: "readFile",
 				filePath,

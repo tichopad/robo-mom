@@ -29,7 +29,6 @@ export function createAboutAuthorTool({ onDebugInfo }: AboutAuthorToolOptions) {
 				),
 		}),
 		execute: async ({ limit = 10 }) => {
-			// TODO: include requestId
 			logger.info("Tool aboutAuthor initiated", {
 				toolName: "aboutAuthor",
 				requestedLimit: limit,

@@ -69,7 +69,6 @@ export function createStreamingChatCompletion({
 	) {
 		const model = google("gemini-2.5-flash");
 
-		// TODO: use requestId
 		logger.debug("LLM request initiated", {
 			conversationLength: messages.length,
 			messages,

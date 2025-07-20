@@ -19,7 +19,6 @@ export function createSearchNotesTool({ onDebugInfo }: SearchNotesToolOptions) {
 			query: z.string().describe("The query to search for."),
 		}),
 		execute: async ({ query }) => {
-			// TODO: include requestId
 			logger.info("Tool searchNotes initiated", {
 				toolName: "searchNotes",
 				query,

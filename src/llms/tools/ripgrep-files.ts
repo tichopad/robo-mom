@@ -37,7 +37,6 @@ export function createRipgrepFilesTool({
 				),
 		}),
 		execute: async ({ pattern, flags = [], maxResults = 10 }) => {
-			// TODO: include requestId
 			logger.info("Tool grepFiles initiated", {
 				toolName: "grepFiles",
 				pattern,
