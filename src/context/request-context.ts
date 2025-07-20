@@ -19,9 +19,9 @@ export function getRequestId(): string | null {
  * @param fn - The function to run within the request context.
  * @returns The result of the function.
  */
-export async function runWithRequestId<T>(
+export function runWithRequestId<T extends Promise<unknown> | unknown>(
 	requestId: string,
-	fn: () => Promise<T> | T,
-): Promise<T> {
+	fn: () => T,
+): T {
 	return requestIdStorage.run(requestId, fn);
 }

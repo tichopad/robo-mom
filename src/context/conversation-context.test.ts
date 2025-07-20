@@ -1,20 +1,20 @@
+import { type TestContext, describe, test } from "node:test";
 import {
-  getConversationId,
-  runWithConversationId,
+	getConversationId,
+	runWithConversationId,
 } from "#src/context/conversation-context.ts";
 import { createRandomString } from "#src/utils.ts";
-import { type TestContext, describe, test } from "node:test";
 
 describe("Conversation Context", () => {
 	test("getConversationId returns null when no context is set", (t: TestContext) => {
 		t.assert.strictEqual(getConversationId(), null);
 	});
 
-	test("runWithConversationId executes function with correct conversation ID and returns result", async (t: TestContext) => {
+	test("runWithConversationId executes function with correct conversation ID and returns result", (t: TestContext) => {
 		const conversationId = createRandomString();
 		const expectedResult = "test result";
 
-		const result = await runWithConversationId(conversationId, async () => {
+		const result = runWithConversationId(conversationId, () => {
 			t.assert.strictEqual(getConversationId(), conversationId);
 			return expectedResult;
 		});
@@ -22,14 +22,16 @@ describe("Conversation Context", () => {
 		t.assert.strictEqual(result, expectedResult);
 	});
 
-	test("conversation ID is isolated between different contexts", async (t: TestContext) => {
+	test("conversation ID is isolated between different contexts", (t: TestContext) => {
 		const conversationId1 = createRandomString();
 		const conversationId2 = createRandomString();
 
-		const [result1, result2] = await Promise.all([
-			runWithConversationId(conversationId1, () => getConversationId()),
-			runWithConversationId(conversationId2, () => getConversationId()),
-		]);
+		const result1 = runWithConversationId(conversationId1, () =>
+			getConversationId(),
+		);
+		const result2 = runWithConversationId(conversationId2, () =>
+			getConversationId(),
+		);
 
 		t.assert.strictEqual(result1, conversationId1);
 		t.assert.strictEqual(result2, conversationId2);
@@ -82,10 +84,10 @@ describe("Conversation Context", () => {
 		t.assert.strictEqual(outerIdAfterInner, outerConversationId);
 	});
 
-	test("conversation ID is not accessible outside of its context", async (t: TestContext) => {
+	test("conversation ID is not accessible outside of its context", (t: TestContext) => {
 		const conversationId = createRandomString();
 
-		await runWithConversationId(conversationId, async () => {
+		runWithConversationId(conversationId, () => {
 			t.assert.strictEqual(getConversationId(), conversationId);
 		});
 
@@ -109,24 +111,23 @@ describe("Conversation Context", () => {
 		t.assert.strictEqual(getConversationId(), null);
 	});
 
-	test("synchronous exceptions are properly handled", async (t: TestContext) => {
+	test("synchronous exceptions are properly handled", (t: TestContext) => {
 		const conversationId = createRandomString();
 		const testError = new Error("Sync test exception");
 
-		await t.assert.rejects(
+		t.assert.throws(() => {
 			runWithConversationId(conversationId, () => {
 				throw testError;
-			}),
-			testError,
-		);
+			});
+		}, testError);
 
 		t.assert.strictEqual(getConversationId(), null);
 	});
 
-	test("works with empty string conversation ID", async (t: TestContext) => {
+	test("works with empty string conversation ID", (t: TestContext) => {
 		const emptyId = "";
 
-		const result = await runWithConversationId(emptyId, () => {
+		const result = runWithConversationId(emptyId, () => {
 			return getConversationId();
 		});
 
@@ -137,7 +138,7 @@ describe("Conversation Context", () => {
 		const conversationId = createRandomString();
 
 		// Test sync function
-		const syncResult = await runWithConversationId(conversationId, () => {
+		const syncResult = runWithConversationId(conversationId, () => {
 			return getConversationId();
 		});
 

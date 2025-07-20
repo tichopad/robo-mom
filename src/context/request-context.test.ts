@@ -1,21 +1,21 @@
+import { type TestContext, describe, test } from "node:test";
 import {
 	getRequestId,
 	runWithRequestId,
 } from "#src/context/request-context.ts";
 import { createRandomString } from "#src/utils.ts";
-import { type TestContext, describe, test } from "node:test";
 
 describe("Request Context", () => {
 	test("getRequestId returns null when no context is set", (t: TestContext) => {
 		t.assert.strictEqual(getRequestId(), null);
 	});
 
-	test("runWithRequestId executes function with correct request ID and returns result", async (t: TestContext) => {
+	test("runWithRequestId executes function with correct request ID and returns result", (t: TestContext) => {
 		const requestId = createRandomString();
 		const expectedResult = "test result";
 		let capturedRequestId: string | null = null;
 
-		const result = await runWithRequestId(requestId, async () => {
+		const result = runWithRequestId(requestId, () => {
 			capturedRequestId = getRequestId();
 			return expectedResult;
 		});
@@ -108,12 +108,12 @@ describe("Request Context", () => {
 		t.assert.strictEqual(getRequestId(), null);
 	});
 
-	test("context is properly cleaned up after synchronous exceptions", async (t: TestContext) => {
+	test("context is properly cleaned up after synchronous exceptions", (t: TestContext) => {
 		const requestId = createRandomString();
 		let contextDuringException: string | null = null;
 
 		try {
-			await runWithRequestId(requestId, () => {
+			runWithRequestId(requestId, () => {
 				contextDuringException = getRequestId();
 				throw new Error("Test sync exception");
 			});
@@ -125,11 +125,11 @@ describe("Request Context", () => {
 		t.assert.strictEqual(getRequestId(), null);
 	});
 
-	test("synchronous functions work correctly", async (t: TestContext) => {
+	test("synchronous functions work correctly", (t: TestContext) => {
 		const requestId = createRandomString();
 		let capturedRequestId: string | null = null;
 
-		const result = await runWithRequestId(requestId, () => {
+		const result = runWithRequestId(requestId, () => {
 			capturedRequestId = getRequestId();
 			return "sync result";
 		});
@@ -138,12 +138,12 @@ describe("Request Context", () => {
 		t.assert.strictEqual(result, "sync result");
 	});
 
-	test("functions returning undefined or null work correctly", async (t: TestContext) => {
+	test("functions returning undefined or null work correctly", (t: TestContext) => {
 		const requestId = createRandomString();
 
-		const undefinedResult = await runWithRequestId(requestId, () => undefined);
-		const nullResult = await runWithRequestId(requestId, () => null);
-		const voidResult = await runWithRequestId(requestId, () => {
+		const undefinedResult = runWithRequestId(requestId, () => undefined);
+		const nullResult = runWithRequestId(requestId, () => null);
+		const voidResult = runWithRequestId(requestId, () => {
 			// Function with no return statement
 		});
 
@@ -152,11 +152,11 @@ describe("Request Context", () => {
 		t.assert.strictEqual(voidResult, undefined);
 	});
 
-	test("empty string request ID is handled correctly", async (t: TestContext) => {
+	test("empty string request ID is handled correctly", (t: TestContext) => {
 		const emptyRequestId = "";
 		let capturedRequestId: string | null = null;
 
-		await runWithRequestId(emptyRequestId, () => {
+		runWithRequestId(emptyRequestId, () => {
 			capturedRequestId = getRequestId();
 		});
 

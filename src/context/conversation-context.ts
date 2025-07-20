@@ -29,10 +29,9 @@ export function getConversationId(): string | null {
  *
  * @param conversationId - The conversation ID to use for this context.
  * @param fn - The function to run within the conversation context. Can be sync or async.
- * @returns A promise that resolves to the result of the function.
+ * @returns The result of the function.
  *
  * @example
- * ```typescript
  * const conversationId = createRandomString();
  * const result = await runWithConversationId(conversationId, async () => {
  *   // All operations here have access to the conversation ID
@@ -40,11 +39,10 @@ export function getConversationId(): string | null {
  *   await someAsyncOperation();
  *   return someResult;
  * });
- * ```
  */
-export async function runWithConversationId<T>(
+export function runWithConversationId<T extends Promise<unknown> | unknown>(
 	conversationId: string,
-	fn: () => Promise<T> | T,
-): Promise<T> {
+	fn: () => T,
+): T {
 	return conversationIdStorage.run(conversationId, fn);
 }
