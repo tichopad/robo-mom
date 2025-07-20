@@ -1,78 +1,42 @@
-import { type TestContext, describe, test } from "node:test";
 import {
-	getConversationId,
-	runWithConversationId,
-	setConversationId,
+  getConversationId,
+  runWithConversationId,
 } from "#src/context/conversation-context.ts";
 import { createRandomString } from "#src/utils.ts";
+import { type TestContext, describe, test } from "node:test";
 
 describe("Conversation Context", () => {
 	test("getConversationId returns null when no context is set", (t: TestContext) => {
 		t.assert.strictEqual(getConversationId(), null);
 	});
 
-	test("setConversationId sets the conversation ID in current context", (t: TestContext) => {
-		const conversationId = createRandomString();
-		setConversationId(conversationId);
-		t.assert.strictEqual(getConversationId(), conversationId);
-	});
-
-	test("runWithConversationId executes function with correct conversation ID", async (t: TestContext) => {
-		const conversationId = createRandomString();
-		let capturedConversationId: string | null = null;
-
-		await runWithConversationId(conversationId, async () => {
-			capturedConversationId = getConversationId();
-		});
-
-		t.assert.strictEqual(capturedConversationId, conversationId);
-	});
-
-	test("runWithConversationId returns the function's result", async (t: TestContext) => {
+	test("runWithConversationId executes function with correct conversation ID and returns result", async (t: TestContext) => {
 		const conversationId = createRandomString();
 		const expectedResult = "test result";
 
 		const result = await runWithConversationId(conversationId, async () => {
+			t.assert.strictEqual(getConversationId(), conversationId);
 			return expectedResult;
 		});
 
 		t.assert.strictEqual(result, expectedResult);
 	});
 
-	test("conversation ID is isolated between different runWithConversationId calls", async (t: TestContext) => {
+	test("conversation ID is isolated between different contexts", async (t: TestContext) => {
 		const conversationId1 = createRandomString();
 		const conversationId2 = createRandomString();
-		let capturedConversationId1: string | null = null;
-		let capturedConversationId2: string | null = null;
 
-		await runWithConversationId(conversationId1, async () => {
-			capturedConversationId1 = getConversationId();
-		});
+		const [result1, result2] = await Promise.all([
+			runWithConversationId(conversationId1, () => getConversationId()),
+			runWithConversationId(conversationId2, () => getConversationId()),
+		]);
 
-		await runWithConversationId(conversationId2, async () => {
-			capturedConversationId2 = getConversationId();
-		});
-
-		t.assert.strictEqual(capturedConversationId1, conversationId1);
-		t.assert.strictEqual(capturedConversationId2, conversationId2);
-		t.assert.notStrictEqual(capturedConversationId1, capturedConversationId2);
+		t.assert.strictEqual(result1, conversationId1);
+		t.assert.strictEqual(result2, conversationId2);
+		t.assert.notStrictEqual(result1, result2);
 	});
 
-	test("conversation ID is not accessible outside of its context", async (t: TestContext) => {
-		const conversationId = createRandomString();
-		let outsideConversationId: string | null = null;
-
-		await runWithConversationId(conversationId, async () => {
-			// Inside context
-			t.assert.strictEqual(getConversationId(), conversationId);
-		});
-
-		// Outside context
-		outsideConversationId = getConversationId();
-		t.assert.strictEqual(outsideConversationId, null);
-	});
-
-	test("multiple concurrent contexts work independently", async (t: TestContext) => {
+	test("multiple concurrent contexts work independently with async operations", async (t: TestContext) => {
 		const conversationId1 = createRandomString();
 		const conversationId2 = createRandomString();
 		const conversationId3 = createRandomString();
@@ -99,26 +63,10 @@ describe("Conversation Context", () => {
 		t.assert.strictEqual(results[2], conversationId3);
 	});
 
-	test("nested contexts - inner context overrides outer", async (t: TestContext) => {
+	test("nested contexts behave correctly", async (t: TestContext) => {
 		const outerConversationId = createRandomString();
 		const innerConversationId = createRandomString();
-		let innerCapturedConversationId: string | null = null;
-
-		await runWithConversationId(outerConversationId, async () => {
-			t.assert.strictEqual(getConversationId(), outerConversationId);
-
-			await runWithConversationId(innerConversationId, async () => {
-				innerCapturedConversationId = getConversationId();
-			});
-		});
-
-		t.assert.strictEqual(innerCapturedConversationId, innerConversationId);
-	});
-
-	test("nested contexts - outer context is restored after inner completes", async (t: TestContext) => {
-		const outerConversationId = createRandomString();
-		const innerConversationId = createRandomString();
-		let outerConversationIdAfterInner: string | null = null;
+		let outerIdAfterInner: string | null = null;
 
 		await runWithConversationId(outerConversationId, async () => {
 			t.assert.strictEqual(getConversationId(), outerConversationId);
@@ -127,129 +75,82 @@ describe("Conversation Context", () => {
 				t.assert.strictEqual(getConversationId(), innerConversationId);
 			});
 
-			outerConversationIdAfterInner = getConversationId();
+			// Outer context should be restored after inner completes
+			outerIdAfterInner = getConversationId();
 		});
 
-		t.assert.strictEqual(outerConversationIdAfterInner, outerConversationId);
+		t.assert.strictEqual(outerIdAfterInner, outerConversationId);
 	});
 
-	test("deep nesting works correctly", async (t: TestContext) => {
-		const level1Id = createRandomString();
-		const level2Id = createRandomString();
-		const level3Id = createRandomString();
-		let level3CapturedId: string | null = null;
-		let level2CapturedId: string | null = null;
-		let level1CapturedId: string | null = null;
-
-		await runWithConversationId(level1Id, async () => {
-			t.assert.strictEqual(getConversationId(), level1Id);
-
-			await runWithConversationId(level2Id, async () => {
-				t.assert.strictEqual(getConversationId(), level2Id);
-
-				await runWithConversationId(level3Id, async () => {
-					level3CapturedId = getConversationId();
-				});
-
-				level2CapturedId = getConversationId();
-			});
-
-			level1CapturedId = getConversationId();
-		});
-
-		t.assert.strictEqual(level3CapturedId, level3Id);
-		t.assert.strictEqual(level2CapturedId, level2Id);
-		t.assert.strictEqual(level1CapturedId, level1Id);
-	});
-
-	test("conversation ID persists across async operations within same context", async (t: TestContext) => {
+	test("conversation ID is not accessible outside of its context", async (t: TestContext) => {
 		const conversationId = createRandomString();
-		let capturedConversationId: string | null = null;
 
 		await runWithConversationId(conversationId, async () => {
-			await new Promise((resolve) => setTimeout(resolve, 10));
-			capturedConversationId = getConversationId();
+			t.assert.strictEqual(getConversationId(), conversationId);
 		});
 
-		t.assert.strictEqual(capturedConversationId, conversationId);
+		// Should be null outside the context
+		t.assert.strictEqual(getConversationId(), null);
 	});
 
-	test("conversation ID is maintained across await calls", async (t: TestContext) => {
+	test("exceptions are properly handled and context is cleaned up", async (t: TestContext) => {
 		const conversationId = createRandomString();
-		let beforeAwaitId: string | null = null;
-		let afterAwaitId: string | null = null;
+		const testError = new Error("Test exception");
 
-		await runWithConversationId(conversationId, async () => {
-			beforeAwaitId = getConversationId();
-			await new Promise((resolve) => setTimeout(resolve, 10));
-			afterAwaitId = getConversationId();
-		});
-
-		t.assert.strictEqual(beforeAwaitId, conversationId);
-		t.assert.strictEqual(afterAwaitId, conversationId);
-	});
-
-	test("exceptions in runWithConversationId don't leak conversation ID to outer context", async (t: TestContext) => {
-		const conversationId = createRandomString();
-		let outerConversationId: string | null = null;
-
-		try {
-			await runWithConversationId(conversationId, async () => {
-				throw new Error("Test exception");
-			});
-		} catch (error) {
-			// Exception caught
-		}
-
-		outerConversationId = getConversationId();
-		t.assert.strictEqual(outerConversationId, null);
-	});
-
-	test("conversation ID is properly cleaned up after exceptions", async (t: TestContext) => {
-		const conversationId = createRandomString();
-		let afterExceptionId: string | null = null;
-
-		try {
-			await runWithConversationId(conversationId, async () => {
+		await t.assert.rejects(
+			runWithConversationId(conversationId, async () => {
 				t.assert.strictEqual(getConversationId(), conversationId);
-				throw new Error("Test exception");
-			});
-		} catch (error) {
-			// Exception caught
-		}
+				throw testError;
+			}),
+			testError,
+		);
 
-		afterExceptionId = getConversationId();
-		t.assert.strictEqual(afterExceptionId, null);
+		// Context should be cleaned up after exception
+		t.assert.strictEqual(getConversationId(), null);
 	});
 
-	test("synchronous functions work in runWithConversationId", async (t: TestContext) => {
+	test("synchronous exceptions are properly handled", async (t: TestContext) => {
 		const conversationId = createRandomString();
-		let capturedConversationId: string | null = null;
+		const testError = new Error("Sync test exception");
 
-		await runWithConversationId(conversationId, () => {
-			capturedConversationId = getConversationId();
-			return "sync result";
-		});
+		await t.assert.rejects(
+			runWithConversationId(conversationId, () => {
+				throw testError;
+			}),
+			testError,
+		);
 
-		t.assert.strictEqual(capturedConversationId, conversationId);
+		t.assert.strictEqual(getConversationId(), null);
 	});
 
-	test("setConversationId affects only current context", async (t: TestContext) => {
-		const conversationId1 = createRandomString();
-		const conversationId2 = createRandomString();
-		let context1Id: string | null = null;
-		let context2Id: string | null = null;
+	test("works with empty string conversation ID", async (t: TestContext) => {
+		const emptyId = "";
 
-		await runWithConversationId(conversationId1, async () => {
-			setConversationId(conversationId2);
-			context1Id = getConversationId();
+		const result = await runWithConversationId(emptyId, () => {
+			return getConversationId();
 		});
 
-		await runWithConversationId(conversationId1, async () => {
-			context2Id = getConversationId();
+		t.assert.strictEqual(result, emptyId);
+	});
+
+	test("supports both sync and async functions", async (t: TestContext) => {
+		const conversationId = createRandomString();
+
+		// Test sync function
+		const syncResult = await runWithConversationId(conversationId, () => {
+			return getConversationId();
 		});
 
-		t.assert.strictEqual(context1Id, conversationId2);
-		t.assert.strictEqual(context2Id, conversationId1);
+		// Test async function
+		const asyncResult = await runWithConversationId(
+			conversationId,
+			async () => {
+				await new Promise((resolve) => setTimeout(resolve, 1));
+				return getConversationId();
+			},
+		);
+
+		t.assert.strictEqual(syncResult, conversationId);
+		t.assert.strictEqual(asyncResult, conversationId);
 	});
 });

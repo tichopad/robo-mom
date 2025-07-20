@@ -14,14 +14,6 @@ export function getRequestId(): string | null {
 }
 
 /**
- * Set the request ID in the current async context.
- * @param requestId - The request ID to set.
- */
-export function setRequestId(requestId: string): void {
-	requestIdStorage.enterWith(requestId);
-}
-
-/**
  * Run a function within a request context with the given request ID.
  * @param requestId - The request ID to use for this context.
  * @param fn - The function to run within the request context.

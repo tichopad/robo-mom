@@ -20,19 +20,6 @@ export function getConversationId(): string | null {
 }
 
 /**
- * Set the conversation ID in the current async context.
- *
- * This function sets the conversation ID for the current async context and all
- * subsequent async operations that inherit from this context. This is typically
- * called when starting a new conversation or when switching conversation contexts.
- *
- * @param conversationId - The conversation ID to set for the current context.
- */
-export function setConversationId(conversationId: string): void {
-	conversationIdStorage.enterWith(conversationId);
-}
-
-/**
  * Run a function within a conversation context with the given conversation ID.
  *
  * This function executes the provided function within a specific conversation context,
