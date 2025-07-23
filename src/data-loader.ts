@@ -8,7 +8,7 @@ import { test as testFrontmatter } from "@std/front-matter/test";
 import { eq } from "drizzle-orm";
 import { chunkMarkdown } from "#src/chunk-text.ts";
 import { db } from "#src/db/client.ts";
-import { notesTable } from "#src/db/schema.ts";
+import { newNoteSchema, notesTable } from "#src/db/schema.ts";
 import { generateEmbedding } from "#src/llms/embeddings.ts";
 import { logger } from "#src/logger/logger.ts";
 import { print } from "#src/print.ts";
@@ -129,7 +129,7 @@ async function loadMarkdownFileToDb(filePath: string): Promise<boolean> {
 			"search_document",
 		);
 
-		await db.insert(notesTable).values({
+		const newNote = newNoteSchema.parse({
 			filename: filePath,
 			chunk_index: chunkIndex,
 			text: chunk.content,
@@ -137,7 +137,8 @@ async function loadMarkdownFileToDb(filePath: string): Promise<boolean> {
 			filename_vector: filePathEmbedding,
 			checksum: checksum,
 			frontmatter_attributes: attrs,
-		});
+		})
+		await db.insert(notesTable).values(newNote);
 
 		logger.debug("Inserted chunk %d of %s into database", chunkIndex, filePath);
 
